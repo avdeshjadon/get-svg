@@ -20,15 +20,19 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             ext: ""
+            archive: tar.gz
           - os: macos-14
             target: aarch64-apple-darwin
             ext: ""
+            archive: tar.gz
           - os: macos-14
             target: x86_64-apple-darwin
             ext: ""
+            archive: tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             ext: .exe
+            archive: zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -49,27 +53,28 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           EXT: ${{ matrix.ext }}
+          ARCHIVE: ${{ matrix.archive }}
         run: |
           set -euo pipefail
           PREFIX="get-svg-$TARGET"
+          ARTIFACT="get-svg-$TARGET.$ARCHIVE"
           mkdir -p "dist/$PREFIX"
           cp "target/$TARGET/release/get-svg$EXT" "dist/$PREFIX/"
           cp "target/$TARGET/release/getsvg$EXT" "dist/$PREFIX/"
           cp README.md LICENSE-MIT LICENSE-APACHE "dist/$PREFIX/"
           cd dist
-          if [ "$TARGET" = "x86_64-pc-windows-msvc" ]; then
-            7z a "$PREFIX.zip" "$PREFIX"
-            echo "artifact=$PREFIX.zip" >> "$GITHUB_ENV"
+          if [ "$ARCHIVE" = "zip" ]; then
+            7z a "$ARTIFACT" "$PREFIX"
           else
-            tar -czf "$PREFIX.tar.gz" "$PREFIX"
-            echo "artifact=$PREFIX.tar.gz" >> "$GITHUB_ENV"
+            tar -czf "$ARTIFACT" "$PREFIX"
           fi
 
       - name: Upload binary checksum
         shell: bash
         env:
-          ARTIFACT: ${{ env.artifact }}
+          ARTIFACT: get-svg-${{ matrix.target }}.${{ matrix.archive }}
         run: |
+          set -euo pipefail
           cd dist
           if command -v shasum >/dev/null 2>&1; then
             shasum -a 256 "$ARTIFACT" > "$ARTIFACT.sha256"
@@ -78,11 +83,10 @@ jobs:
           else
             openssl dgst -sha256 "$ARTIFACT" | awk '{print $2}' > "$ARTIFACT.sha256"
           fi
-          echo "checksum=$PWD/$ARTIFACT.sha256" >> "$GITHUB_ENV"
 
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/${{ env.artifact }}
-            dist/${{ env.artifact }}.sha256
+            dist/get-svg-${{ matrix.target }}.${{ matrix.archive }}
+            dist/get-svg-${{ matrix.target }}.${{ matrix.archive }}.sha256
           generate_release_notes: true
