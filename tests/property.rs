@@ -5,6 +5,19 @@ use get_svg::security::{
 };
 use proptest::prelude::*;
 
+/// Regression: truncating a long name could leave trailing Unicode
+/// whitespace (e.g. an en-quad) or dots behind, which the next sanitize
+/// pass would then strip — breaking idempotency. Found by the property
+/// test below.
+#[test]
+fn sanitize_is_idempotent_across_truncation() {
+    let input = "𛅕0𐴰®¡0AA𜰀A 𐺰Σ￼ᥰ0🉀0ぁ\u{bd7}a ®ቚ 0ﯓ0 લ A౷𞹛\u{113c5}0ຌ0𑌲\u{10efc}𞟰AぁA\u{1e008}aA  ￼a￼ a𞹑ඳa𐳀A🌀aA 𛅰 ® 0প 𝒮0𝋠A￼ ®ଡ଼A𞥐 a‐A←AA0𐌀 ꭰ  \u{2000}.① 🌀ಪA \u{abc}";
+    let once = sanitize_filename(input);
+    let twice = sanitize_filename(&once);
+    assert_eq!(once, twice);
+    assert!(once.len() <= get_svg::security::MAX_FILENAME_BYTES);
+}
+
 proptest! {
     /// Sanitizing must be idempotent: applying it twice never changes output.
     #[test]

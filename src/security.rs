@@ -106,7 +106,9 @@ pub fn truncate_name(name: &str, max: usize) -> String {
     while end > 0 && !stem.is_char_boundary(end) {
         end -= 1;
     }
-    format!("{}{}", stem[..end].trim_end_matches(['.', ' ']), ext)
+    let cleaned_stem = stem[..end].trim_end_matches(|c: char| c == '.' || c.is_whitespace());
+    let cleaned_ext = ext.trim_end_matches(|c: char| c == '.' || c.is_whitespace());
+    format!("{cleaned_stem}{cleaned_ext}")
 }
 
 /// Truncate arbitrary text to at most `max` UTF-8 chars, appending `…`.
