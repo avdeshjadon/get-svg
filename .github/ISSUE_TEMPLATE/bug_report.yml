@@ -1,0 +1,51 @@
+name: Bug report
+description: Report a crash, wrong behavior, or security concern
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Security-sensitive issues must NOT be posted
+        here — see [SECURITY.md](../../SECURITY.md) and report them privately.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `get-svg --version` and your OS.
+      placeholder: "0.1.0 on macOS 14.5 (arm64)"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or TUI steps
+      description: The exact command, or the key presses, that triggered the problem.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Paste error output, screenshots, or log lines.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: A safe, sanitized example (never a private/live file). Search terms and category names are best.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verification
+      options:
+        - label: I ran the failing command with a fresh `get-svg` and the issue persists
+        - label: I reviewed SECURITY.md before filing (no sensitive data included)

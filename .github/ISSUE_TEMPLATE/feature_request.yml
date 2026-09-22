@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest a new command, flag, or TUI workflow
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For TUI changes, please describe the key-press workflow end to end.
+        Large proposals should be discussed before code lands.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is the workflow you're trying to do?
+      description: A concrete scenario, from key press (or command) to finished result.
+    validations:
+      required: true
+  - type: textarea
+    id: surface
+    attributes:
+      label: Which surface does it touch?
+      description: CLI, TUI, output formats, cache, download/batch behavior, or new provider support.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+    validations:
+      required: false
+  - type: textarea
+    id: etiquette
+    attributes:
+      label: Wikimedia etiquette notes
+      description: Will this change request rates or response sizes toward more aggressive defaults? If so, explain the opt-in story.

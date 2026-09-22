@@ -1,0 +1,88 @@
+[package]
+name = "get-svg"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+authors = ["Avdesh Jadon <avdeshyadav15@gmail.com>"]
+description = "Discover, inspect, and download SVG assets from Wikimedia Commons from your terminal."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/avdeshjadon/get-svg"
+homepage = "https://github.com/avdeshjadon/get-svg"
+readme = "README.md"
+keywords = ["svg", "wikimedia", "commons", "download", "tui"]
+categories = ["command-line-utilities", "multimedia"]
+exclude = ["/.github"]
+default-run = "get-svg"
+
+[lib]
+name = "get_svg"
+path = "src/lib.rs"
+
+[[bin]]
+name = "get-svg"
+path = "src/main.rs"
+
+# Convenience alias (identical behavior) so both `get-svg` and `getsvg` work.
+[[bin]]
+name = "getsvg"
+path = "src/bin/getsvg.rs"
+
+[dependencies]
+# --- async runtime ---------------------------------------------------------
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "time", "sync"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+futures = "0.3"
+
+# --- HTTP ------------------------------------------------------------------
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "stream",
+    "gzip",
+    "rustls-tls",
+] }
+url = "2"
+
+# --- serialization ---------------------------------------------------------
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# --- cli + terminal ui -----------------------------------------------------
+clap = { version = "4", features = ["derive"] }
+crossterm = "0.28"
+ratatui = "0.29"
+indicatif = "0.17"
+
+# --- files / archives ------------------------------------------------------
+zip = { version = "2", default-features = false, features = ["deflate"] }
+tempfile = "3"
+
+# --- misc ------------------------------------------------------------------
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5"
+regex = "1"
+sha2 = "0.10"
+thiserror = "1"
+
+# --- observability ---------------------------------------------------------
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "test-util"] }
+httpmock = "0.7"
+proptest = "1"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "security"
+harness = false
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"

@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    name: Build and publish binaries
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            ext: ""
+          - os: macos-14
+            target: aarch64-apple-darwin
+            ext: ""
+          - os: macos-14
+            target: x86_64-apple-darwin
+            ext: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            ext: .exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: release-${{ matrix.target }}
+
+      - name: Build release binaries
+        run: cargo build --release --locked --bins --target ${{ matrix.target }}
+
+      - name: Package
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          EXT: ${{ matrix.ext }}
+        run: |
+          set -euo pipefail
+          PREFIX="get-svg-$TARGET"
+          mkdir -p "dist/$PREFIX"
+          cp "target/$TARGET/release/get-svg$EXT" "dist/$PREFIX/"
+          cp "target/$TARGET/release/getsvg$EXT" "dist/$PREFIX/"
+          cp README.md LICENSE-MIT LICENSE-APACHE "dist/$PREFIX/"
+          cd dist
+          if [ "$TARGET" = "x86_64-pc-windows-msvc" ]; then
+            7z a "$PREFIX.zip" "$PREFIX"
+            echo "artifact=$PREFIX.zip" >> "$GITHUB_ENV"
+          else
+            tar -czf "$PREFIX.tar.gz" "$PREFIX"
+            echo "artifact=$PREFIX.tar.gz" >> "$GITHUB_ENV"
+          fi
+
+      - name: Upload binary checksum
+        shell: bash
+        env:
+          ARTIFACT: ${{ env.artifact }}
+        run: |
+          cd dist
+          shasum -a 256 "$ARTIFACT" > "$ARTIFACT.sha256"
+          echo "checksum=$PWD/$ARTIFACT.sha256" >> "$GITHUB_ENV"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/${{ env.artifact }}
+            dist/${{ env.artifact }}.sha256
+          generate_release_notes: true
