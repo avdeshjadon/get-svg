@@ -71,7 +71,13 @@ jobs:
           ARTIFACT: ${{ env.artifact }}
         run: |
           cd dist
-          shasum -a 256 "$ARTIFACT" > "$ARTIFACT.sha256"
+          if command -v shasum >/dev/null 2>&1; then
+            shasum -a 256 "$ARTIFACT" > "$ARTIFACT.sha256"
+          elif command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$ARTIFACT" > "$ARTIFACT.sha256"
+          else
+            openssl dgst -sha256 "$ARTIFACT" | awk '{print $2}' > "$ARTIFACT.sha256"
+          fi
           echo "checksum=$PWD/$ARTIFACT.sha256" >> "$GITHUB_ENV"
 
       - uses: softprops/action-gh-release@v2
