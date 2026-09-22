@@ -407,12 +407,22 @@ fn draw_search_input(f: &mut Frame, area: Rect, app: &App) {
             Span::styled("Type a category name, e.g. ", t.text_style()),
             Span::styled("Logos", t.accent_style()),
         ])
+    } else if render_looks_like_file(&app.input) {
+        Line::from(vec![
+            Span::styled("Download tip: ", t.dim_style()),
+            Span::styled(
+                "Enter yahan file naam — direct download hoga",
+                t.accent_style(),
+            ),
+        ])
     } else {
         Line::from(vec![
-            Span::styled("Search tip: ", t.dim_style()),
-            Span::styled("Phrases work too — ", t.text_style()),
-            Span::styled("\"arrow icons\"", t.accent_style()),
-            Span::styled(" finds SVG files only.", t.text_style()),
+            Span::styled("Search: ", t.dim_style()),
+            Span::styled("Enter = search. File naam (", t.text_style()),
+            Span::styled("github.svg", t.accent_style()),
+            Span::styled(") ya ", t.text_style()),
+            Span::styled("File:Title", t.accent_style()),
+            Span::styled(" type karo to direct download. ", t.text_style()),
         ])
     };
     f.render_widget(hint, chunks[2]);
@@ -430,8 +440,17 @@ fn style_if_incategory(
     }
 }
 
-/// Byte offset for placing the block cursor (single-line grapheme caveat
-/// accepted; normal filenames/queries are fine).
+/// True when the typed query is more likely a file name than a search
+/// phrase: a `File:...` title, or a single token ending in `.svg`.
+fn render_looks_like_file(raw: &str) -> bool {
+    let t = raw.trim();
+    if t.is_empty() {
+        return false;
+    }
+    let lower = t.to_lowercase();
+    lower.starts_with("file:") || (lower.ends_with(".svg") && !t.contains(char::is_whitespace))
+}
+
 fn cursor_x(input: &str) -> u16 {
     input.chars().count() as u16
 }

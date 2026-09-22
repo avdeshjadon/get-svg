@@ -110,12 +110,36 @@ impl WikimediaClient {
         self.inner.client.clone()
     }
 
+    /// Tune the ranking of a single-token query: a bare word is usually meant as
+    /// a file name or brand term (`github`, `amazon`), so scope it to titles.
+    /// Multi-word phrases and explicit operators are left untouched.
+    fn title_boost(q: &str) -> String {
+        let trimmed = q.trim();
+        let single = !trimmed.contains(char::is_whitespace);
+        let operator = [
+            "intitle:",
+            "incategory:",
+            "filetype:",
+            "filemime:",
+            "haswbstatement:",
+            "deepcategory:",
+        ]
+        .iter()
+        .any(|op| trimmed.to_lowercase().starts_with(op));
+        let file = trimmed.to_lowercase().starts_with("file:");
+        if single && !operator && !file && trimmed.len() >= 2 {
+            format!("intitle:{trimmed}")
+        } else {
+            trimmed.to_string()
+        }
+    }
+
     /// Build the srsearch string: SVG-only filter plus optional extras.
     pub fn compose_search(query: &str, extra: Option<&str>) -> String {
         let mut parts: Vec<String> = Vec::new();
         let q = query.trim();
         if !q.is_empty() {
-            parts.push(q.to_string());
+            parts.push(Self::title_boost(q));
         }
         if let Some(extra) = extra {
             let extra = extra.trim();
@@ -406,11 +430,11 @@ mod tests {
     fn compose_search_appends_svg_filter() {
         assert_eq!(
             WikimediaClient::compose_search("github", None),
-            "github filemime:image/svg+xml"
+            "intitle:github filemime:image/svg+xml"
         );
         assert_eq!(
             WikimediaClient::compose_search("github", Some("incategory:Logos")),
-            "github incategory:Logos filemime:image/svg+xml"
+            "intitle:github incategory:Logos filemime:image/svg+xml"
         );
     }
 

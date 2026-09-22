@@ -202,6 +202,17 @@ pub struct App {
 }
 
 impl App {
+    /// True when the typed query is more likely a file name than a search
+    /// phrase: a `File:...` title, or a single token ending in `.svg`.
+    fn looks_like_file(raw: &str) -> bool {
+        let t = raw.trim();
+        if t.is_empty() {
+            return false;
+        }
+        let lower = t.to_lowercase();
+        lower.starts_with("file:") || (lower.ends_with(".svg") && !t.contains(char::is_whitespace))
+    }
+
     pub fn new(settings: Settings) -> Result<App> {
         let provider = WikimediaClient::new(&settings)?;
         let cache = Cache::new(&settings);
@@ -430,7 +441,11 @@ impl App {
                 if query.is_empty() {
                     return;
                 }
-                self.start_search(query, false);
+                if Self::looks_like_file(&query) {
+                    self.start_download_file(query);
+                } else {
+                    self.start_search(query, false);
+                }
             }
             KeyCode::Backspace => {
                 self.input.pop();
