@@ -156,6 +156,7 @@ struct SearchArgs {
 async fn cmd_search(args: SearchArgs) -> Result<i32> {
     let has_download = args.download.is_some();
     let has_zip = args.zip.is_some();
+    let interactive = std::io::stderr().is_terminal();
     let mut settings = Settings::load()?;
     if let Some(c) = args.concurrency {
         settings.max_concurrency = c.clamp(1, 32);
@@ -168,10 +169,21 @@ async fn cmd_search(args: SearchArgs) -> Result<i32> {
     let per_page = args.limit.clamp(1, 500) as u32;
     let offset = (args.page.max(1) - 1) as u64 * per_page as u64;
 
-    eprintln!(
-        "Searching Wikimedia Commons for \"{}\"...",
-        args.query.trim()
-    );
+    // Animated search status when stderr is a terminal; plain line otherwise.
+    let spinner = interactive.then(|| {
+        let s = ProgressBar::new_spinner();
+        s.set_style(
+            ProgressStyle::with_template("{spinner:.cyan} {msg}")
+                .unwrap()
+                .tick_strings(&["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]),
+        );
+        s.set_message(format!(
+            "Searching Wikimedia Commons for \"{}\"",
+            args.query.trim()
+        ));
+        s.enable_steady_tick(std::time::Duration::from_millis(80));
+        s
+    });
     let started = std::time::Instant::now();
 
     let mut total_hits: Option<u64> = None;
@@ -198,6 +210,10 @@ async fn cmd_search(args: SearchArgs) -> Result<i32> {
         if fetched.len() >= want {
             break;
         }
+    }
+
+    if let Some(s) = &spinner {
+        s.finish_and_clear();
     }
 
     let assets = search::filter_by_license(fetched, args.license.as_deref());
@@ -256,16 +272,72 @@ async fn cmd_search(args: SearchArgs) -> Result<i32> {
     write_assets(&mut lock, args.format, &args.query, total_hits, &assets)?;
     lock.flush()?;
 
-    // Show a clear download shortcut when the user did not ask to save files.
-    if !has_download && !has_zip && std::io::stderr().is_terminal() {
-        eprintln!(
-            "\u{2139} Results are printed above. To save them:\n    get-svg search \"{}\" --download DIR\n    get-svg search \"{}\" --zip OUT.zip\n  In the interactive UI (run `get-svg`), use `d` / `A` / `z` on the results screen.",
-            args.query.trim(),
-            args.query.trim(),
-        );
+    // Guided download: when the user didn't pass --download/--zip, offer to save
+    // the results right here — no extra flags to remember. Skipped when stdout
+    // is redirected/automated (only stderr being a TTY means a human).
+    if !has_download && !has_zip && !assets.is_empty() && interactive {
+        let want_download =
+            settings.assume_yes || ask_bool(&format!("\nDownload {} file(s)", assets.len()), true)?;
+        if want_download {
+            let dest = if settings.assume_yes {
+                settings.download_dir.clone()
+            } else {
+                ask_dir(
+                    "Save to folder (Enter = app download folder)",
+                    &settings.download_dir,
+                )?
+            };
+            let stats = run_downloads(
+                &settings,
+                &provider,
+                &assets,
+                &dest,
+                args.overwrite,
+                settings.assume_yes,
+            )
+            .await?;
+            print_stats(&stats);
+            if stats.failed > 0 {
+                exit_code = 1;
+            }
+            metadata::write_metadata_dir(&dest, &args.query, &assets)?;
+            eprintln!("\u{2192} Saved to {}", dest.display());
+        } else {
+            eprintln!(
+                "\nTip: re-run with `get-svg search \"{}\" --download DIR`, or `--zip FILE`.",
+                args.query.trim()
+            );
+        }
     }
 
     Ok(exit_code)
+}
+
+/// Read a y/n answer from stdin; piped input works too (`echo y | …`).
+fn ask_bool(prompt: &str, default: bool) -> Result<bool> {
+    let hint = if default { "[Y/n]" } else { "[y/N]" };
+    eprint!("{prompt} {hint} ");
+    std::io::stderr().flush()?;
+    let mut line = String::new();
+    std::io::stdin().read_line(&mut line)?;
+    let answer = line.trim().to_ascii_lowercase();
+    if answer.is_empty() {
+        return Ok(default);
+    }
+    Ok(matches!(answer.as_str(), "y" | "yes"))
+}
+
+/// Read a destination folder (Enter keeps the default; `~/…` expands).
+fn ask_dir(prompt: &str, default: &std::path::Path) -> Result<PathBuf> {
+    eprint!("{prompt} [{}]: ", default.display());
+    std::io::stderr().flush()?;
+    let mut line = String::new();
+    std::io::stdin().read_line(&mut line)?;
+    let input = line.trim();
+    if input.is_empty() {
+        return Ok(default.to_path_buf());
+    }
+    Ok(crate::config::expand_tilde(PathBuf::from(input)))
 }
 
 async fn cmd_download(
@@ -422,18 +494,18 @@ fn cmd_version() {
 
 fn default_style() -> ProgressStyle {
     ProgressStyle::with_template(
-        "{spinner:.green} {msg}\n[{bar:40.cyan/blue}] {pos}/{len} ({percent}%) {bytes}/{total_bytes}",
+        "{spinner:.green} {msg}\n[{bar:40.cyan/blue}] {pos}/{len} ({percent}%) {bytes}/{total_bytes} {bytes_per_sec} ETA {eta}",
     )
     .unwrap()
-    .progress_chars("=>-")
+    .progress_chars("=>─")
 }
 
 fn bulk_style() -> ProgressStyle {
     ProgressStyle::with_template(
-        "{spinner:.green} {msg}\n[{bar:40.cyan/blue}] {pos}/{len} ({percent}%)",
+        "{spinner:.green} {msg}\n[{bar:40.cyan/blue}] {pos}/{len} ({percent}%) {bytes_per_sec} ETA {eta}",
     )
     .unwrap()
-    .progress_chars("=>-")
+    .progress_chars("=>─")
 }
 
 fn confirm(prompt: &str, assume_yes: bool) -> Result<bool> {

@@ -20,7 +20,16 @@ const LOGO: [&str; 6] = [
     " ╚═════╝ ╚══════╝    ╚═╝       ╚══════╝   ╚═══╝   ╚═════╝ ",
 ];
 
-const SPINNER: [char; 10] = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const SPINNER: [&str; 10] = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+/// Spinner glyph for the current frame (static "/" when animations are off).
+fn spinner(t: &super::theme::Theme, frame: u64) -> &'static str {
+    if t.animations {
+        SPINNER[(frame / 6) as usize % SPINNER.len()]
+    } else {
+        "/"
+    }
+}
 
 pub fn draw(f: &mut Frame, app: &App) {
     let area = f.area();
@@ -65,7 +74,12 @@ pub fn draw(f: &mut Frame, app: &App) {
 
 fn draw_header(f: &mut Frame, area: Rect, app: &App) {
     let title = match app.screen {
-        Screen::Home => crate::APP_NAME.to_string(),
+        Screen::Home => format!(
+            "{} v{} — {}",
+            crate::APP_NAME,
+            crate::VERSION,
+            crate::TAGLINE
+        ),
         Screen::SearchInput => "Search Wikimedia Commons".to_string(),
         Screen::Searching => format!("Search: {}", app.search_query),
         Screen::Results | Screen::Details => format!("Search: {}", app.search_query),
@@ -75,11 +89,12 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
         Screen::Help => "Help".to_string(),
     };
     let style = app.theme.bold_accent();
-    let logo = format!(" {}  ", crate::APP_NAME);
+    // Home already shows the big block logo, so the chrome row carries the
+    // version line instead of repeating the name.
     let text = if app.screen == Screen::Home {
-        logo.clone()
+        title
     } else {
-        format!("{logo} › {title}")
+        format!(" {} › {title}", crate::APP_NAME)
     };
 
     let mut spans = vec![Span::styled(text, style)];
@@ -93,30 +108,96 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn draw_footer(f: &mut Frame, area: Rect, app: &App) {
-    let hint = footer_hint(app);
-    let style = app.theme.dim_style();
-    let line = Line::from(Span::styled(limit_width(&hint, area.width as usize), style));
+    let spans = footer_hint(app);
+    let line = Line::from(limit_spans(Line::from(spans), area.width as usize));
     f.render_widget(line, area);
 }
 
-fn footer_hint(app: &App) -> String {
+fn key_span(t: &super::theme::Theme, keys: &str, desc: &str) -> Vec<Span<'static>> {
+    vec![
+        Span::styled(format!("{keys} "), t.bold_accent()),
+        Span::styled(desc.to_string(), t.dim_style()),
+        Span::raw("  "),
+    ]
+}
+
+fn footer_hint(app: &App) -> Vec<Span<'static>> {
+    let t = &app.theme;
     if !app.status.is_empty() {
-        return app.status.clone();
+        return vec![Span::styled(app.status.clone(), t.text_style())];
     }
+    let mut s: Vec<Span<'static>> = Vec::new();
     match app.screen {
-        Screen::Home => "↑↓ Navigate   Enter Select   / Search   ? Help   q Quit".to_string(),
-        Screen::SearchInput => "Type a query and press Enter   Esc Cancel".to_string(),
-        Screen::Searching => "Searching — Esc Cancel".to_string(),
-        Screen::Results => {
-            let mut s = "↑↓ Navigate   Space Select   a All   n None   Enter Details   d Download   A All".to_string();
-            s += "   z ZIP   / New   r Refresh   ? Help   Esc Home   q Quit";
-            s
+        Screen::Home => {
+            s.extend(key_span(t, "↑↓", "Navigate"));
+            s.extend(key_span(t, "Enter", "Select"));
+            s.extend(key_span(t, "/", "Search"));
+            s.extend(key_span(t, "?", "Help"));
+            s.extend(key_span(t, "q", "Quit"));
         }
-        Screen::Details => "d Download   z ZIP   c Copy URL   a Attribution   o Open Page   ↑↓ Prev/Next   b Back   q Quit".to_string(),
-        Screen::Downloads => "Esc Back   c Clear finished   ? Help   q Quit".to_string(),
-        Screen::Recent => "↑↓ Navigate   Enter Search   Esc Back   q Quit".to_string(),
-        Screen::SettingsInfo | Screen::Help => "Esc Back".to_string(),
+        Screen::SearchInput => {
+            s.extend(key_span(t, "Enter", "Search"));
+            s.extend(key_span(t, "Esc", "Cancel"));
+        }
+        Screen::Searching => {
+            s.extend(key_span(t, "Esc", "Cancel"));
+        }
+        Screen::Results => {
+            s.extend(key_span(t, "↑↓", "Navigate"));
+            s.extend(key_span(t, "Space", "Select"));
+            s.extend(key_span(t, "d", "Download"));
+            s.extend(key_span(t, "A", "Download all"));
+            s.extend(key_span(t, "z", "ZIP"));
+            s.extend(key_span(t, "Enter", "Details"));
+            s.extend(key_span(t, "? ", "Help"));
+            s.extend(key_span(t, "q", "Quit"));
+        }
+        Screen::Details => {
+            s.extend(key_span(t, "d", "Download"));
+            s.extend(key_span(t, "z", "ZIP"));
+            s.extend(key_span(t, "c", "Copy URL"));
+            s.extend(key_span(t, "o", "Open page"));
+            s.extend(key_span(t, "a", "Attribution"));
+            s.extend(key_span(t, "↑↓", "Prev/Next"));
+            s.extend(key_span(t, "b", "Back"));
+            s.extend(key_span(t, "q", "Quit"));
+        }
+        Screen::Downloads => {
+            s.extend(key_span(t, "Esc", "Back"));
+            s.extend(key_span(t, "c", "Clear finished"));
+            s.extend(key_span(t, "?", "Help"));
+            s.extend(key_span(t, "q", "Quit"));
+        }
+        Screen::Recent => {
+            s.extend(key_span(t, "↑↓", "Navigate"));
+            s.extend(key_span(t, "Enter", "Search"));
+            s.extend(key_span(t, "Esc", "Back"));
+        }
+        Screen::SettingsInfo | Screen::Help => {
+            s.extend(key_span(t, "Esc", "Back"));
+        }
     }
+    s
+}
+
+fn limit_spans(line: Line<'static>, max: usize) -> Vec<Span<'static>> {
+    let mut out: Vec<Span<'static>> = Vec::new();
+    let mut seen = 0usize;
+    for span in line.into_iter() {
+        let width = span.content.chars().count();
+        if seen + width > max {
+            let room = max.saturating_sub(seen);
+            if room > 1 {
+                let text: String = span.content.chars().take(room - 1).collect();
+                out.push(Span::styled(text, span.style));
+                out.push(Span::raw("…"));
+            }
+            break;
+        }
+        out.push(span);
+        seen += width;
+    }
+    out
 }
 
 // ---------------------------------------------------------------------------
@@ -151,9 +232,7 @@ fn draw_home(f: &mut Frame, area: Rect, app: &App) {
     ])
     .split(area);
 
-    let logo_block = Block::bordered()
-        .border_style(t.border_style())
-        .title(Span::styled(" GET SVG ", t.title_style()));
+    let logo_block = Block::bordered().border_style(t.border_style());
     let mut logo_text = Text::default();
     for line in LOGO {
         logo_text.push_line(Line::from(Span::styled(line, t.accent_style())));
@@ -292,14 +371,10 @@ fn cursor_x(input: &str) -> u16 {
 
 fn draw_searching(f: &mut Frame, area: Rect, app: &App) {
     let t = &app.theme;
-    let spinner = if t.animations {
-        SPINNER[(app.frame / 6) as usize % SPINNER.len()].to_string()
-    } else {
-        "/".to_string()
-    };
+    let spinner = spinner(t, app.frame);
     let text = Text::from(vec![
         Line::from(vec![
-            Span::styled(spinner.clone(), t.accent_style()),
+            Span::styled(spinner, t.accent_style()),
             Span::raw("  Searching Wikimedia Commons…"),
         ])
         .alignment(Alignment::Center),
@@ -353,6 +428,38 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
     let name_width = (inner.width as usize).saturating_sub(4 + 6 + 10 + 28);
     let name_width = name_width.max(20) as u16;
 
+    let (head_area, list_area) = {
+        let c = Layout::vertical([Constraint::Length(1), Constraint::Min(0)]).split(inner);
+        (c[0], c[1])
+    };
+
+    // Column header + pagination summary share the top row of the list.
+    let total = app.total_hits.unwrap_or(app.assets.len() as u64);
+    let summary = if app.loading_more {
+        "loading more…".to_string()
+    } else {
+        format!("{}–{} of {}", 1, app.assets.len(), total)
+    };
+    let size_hdr = format!("{:>9}", "SIZE");
+    let lic_hdr = format!("{:<26}", "LICENSE");
+    let mut header_spans = vec![
+        Span::styled(
+            format!("{:<11}{:<nw$}", "", "NAME", nw = name_width as usize),
+            t.dim_style(),
+        ),
+        Span::raw(" "),
+        Span::styled(format!("{size_hdr} "), t.dim_style()),
+        Span::styled(lic_hdr, t.dim_style()),
+    ];
+    let used: usize = 11 + name_width as usize + 1 + 9 + 1 + 26;
+    if head_area.width as usize > used + summary.chars().count() {
+        header_spans.push(Span::raw(
+            " ".repeat(head_area.width as usize - used - summary.chars().count()),
+        ));
+        header_spans.push(Span::styled(summary, t.dim_style()));
+    }
+    f.render_widget(Paragraph::new(Line::from(header_spans)), head_area);
+
     let mut items: Vec<ListItem> = Vec::new();
     for (i, asset) in app.assets.iter().enumerate() {
         let marker = if app.selected.contains(&i) {
@@ -390,24 +497,7 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
         .highlight_symbol("› ")
         .highlight_style(t.selected_style());
     let mut state = app.list_state.clone();
-    f.render_stateful_widget(list, inner, &mut state);
-
-    // Pagination line
-    let total = app.total_hits.unwrap_or(app.assets.len() as u64);
-    let summary = if app.loading_more {
-        format!("{} results · loading more…", app.assets.len())
-    } else {
-        format!("{}–{} of {}", 1, app.assets.len(), total)
-    };
-    let summary_line = Line::from(Span::styled(summary, t.dim_style()));
-
-    let bottom = Rect {
-        y: area.y + area.height - 2,
-        x: area.x + 2,
-        width: area.width.saturating_sub(4),
-        height: 1,
-    };
-    f.render_widget(summary_line, bottom);
+    f.render_stateful_widget(list, list_area, &mut state);
 }
 
 fn draw_details(f: &mut Frame, area: Rect, app: &App) {
@@ -521,10 +611,10 @@ fn draw_downloads(f: &mut Frame, area: Rect, app: &App) {
     let mut text = Text::default();
 
     if let Some(batch) = &app.batch {
-        draw_batch(&mut text, batch, t);
+        draw_batch(&mut text, batch, t, app.frame);
     }
     if let Some(zip) = &app.zip {
-        draw_zip(&mut text, zip, t);
+        draw_zip(&mut text, zip, t, app.frame);
     }
 
     if !app.jobs.is_empty() {
@@ -541,7 +631,7 @@ fn draw_downloads(f: &mut Frame, area: Rect, app: &App) {
                         50.0
                     };
                     let bar = progress_text(&t.bar_chars(), pct);
-                    ("⠙".to_string(), bar)
+                    (spinner(t, app.frame).to_string(), bar)
                 }
                 JobStatus::Done(path) => ("✓".to_string(), format!("Saved: {}", path.display())),
                 JobStatus::Skipped => ("–".to_string(), "Skipped".to_string()),
@@ -588,7 +678,7 @@ fn draw_downloads(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(para, area);
 }
 
-fn draw_batch<'a>(text: &mut Text<'a>, batch: &BatchUi, t: &super::theme::Theme) {
+fn draw_batch<'a>(text: &mut Text<'a>, batch: &BatchUi, t: &super::theme::Theme, frame: u64) {
     let s = &batch.stats;
     let pct = if s.total > 0 {
         ((s.completed + s.failed + s.skipped) as f64 / s.total as f64 * 100.0).clamp(0.0, 100.0)
@@ -596,7 +686,11 @@ fn draw_batch<'a>(text: &mut Text<'a>, batch: &BatchUi, t: &super::theme::Theme)
         0.0
     };
     let bar = progress_text(&t.bar_chars(), pct);
-    let marker = if batch.finished { "✓" } else { "⠙" };
+    let marker = if batch.finished {
+        "✓"
+    } else {
+        spinner(t, frame)
+    };
     text.push_line(Line::from(vec![
         Span::styled(marker, t.accent_style()),
         Span::styled("  Batch download — ", t.bold_accent()),
@@ -616,8 +710,12 @@ fn draw_batch<'a>(text: &mut Text<'a>, batch: &BatchUi, t: &super::theme::Theme)
     text.push_line(Line::default());
 }
 
-fn draw_zip<'a>(text: &mut Text<'a>, zip: &super::app::ZipUi, t: &super::theme::Theme) {
-    let marker = if !zip.running { "✓" } else { "⠙" };
+fn draw_zip<'a>(text: &mut Text<'a>, zip: &super::app::ZipUi, t: &super::theme::Theme, frame: u64) {
+    let marker = if !zip.running {
+        "✓"
+    } else {
+        spinner(t, frame)
+    };
     text.push_line(Line::from(vec![
         Span::styled(marker, t.accent_style()),
         Span::styled("  ZIP archive — ", t.bold_accent()),
@@ -933,14 +1031,4 @@ fn pad_to(width: usize, s: &str) -> String {
         return String::new();
     }
     " ".repeat(width - count)
-}
-
-fn limit_width(s: &str, max: usize) -> String {
-    if s.chars().count() <= max {
-        s.to_string()
-    } else {
-        let mut out: String = s.chars().take(max.saturating_sub(1)).collect();
-        out.push('…');
-        out
-    }
 }

@@ -85,11 +85,13 @@ pub fn config_dir() -> PathBuf {
 
 /// Default download directory: `~/Downloads/get-svg`.
 pub fn default_download_dir() -> PathBuf {
-    dirs::download_dir()
-        .or_else(dirs::home_dir)
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("Downloads")
-        .join("get-svg")
+    match dirs::download_dir() {
+        Some(dir) => dir.join("get-svg"),
+        None => dirs::home_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("Downloads")
+            .join("get-svg"),
+    }
 }
 
 impl Settings {
@@ -219,7 +221,7 @@ impl Settings {
     }
 }
 
-fn expand_tilde(path: PathBuf) -> PathBuf {
+pub(crate) fn expand_tilde(path: PathBuf) -> PathBuf {
     let s = path.to_string_lossy().to_string();
     if let Some(rest) = s.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
