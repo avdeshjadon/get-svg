@@ -24,6 +24,44 @@ and a rate limiter that stays polite toward Wikimedia's shared infrastructure.
 
 ## Installation
 
+### Pre-built binaries (recommended)
+
+One-line installers fetch the [latest GitHub release](https://github.com/avdeshjadon/get-svg/releases)
+for your OS + CPU and verify its SHA-256 checksum before installing to
+`~/.local/bin`:
+
+```sh
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh
+
+# Windows Git Bash / MSYS
+curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh
+```
+
+```powershell
+# Windows PowerShell (native)
+Set-ExecutionPolicy -Scope Process Bypass
+irm https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.ps1 | iex
+```
+
+Pin a specific version, or install somewhere else:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh -s -- --dir "$HOME/bin"
+curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | GET_SVG_VERSION=v0.1.0 sh
+```
+
+```powershell
+$env:GET_SVG_VERSION = 'v0.1.0'
+irm https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.ps1 | iex
+```
+
+> The installers print the directory to add to your `PATH` — it is not added
+> automatically. Re-run with a `--dir`/`INSTALL_DIR` override to choose the
+> location.
+
+### From source
+
 ```sh
 cargo install get-svg --locked
 ```
