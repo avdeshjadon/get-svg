@@ -11,6 +11,8 @@ and a rate limiter that stays polite toward Wikimedia's shared infrastructure.
 ## Features
 
 - **Interactive TUI** — search, preview, multi-select, live progress, attribution view.
+  The home screen offers a direct **Download a file** entry (or press `d`) to fetch
+  any file by name, and results screens accept `d` / `A` / `z` for download/ZIP.
 - **Scriptable CLI** — `search`, `category`, `batch`, `download`, `config`, `cache`, `doctor`.
   `--format table|json|jsonl` for pipelines.
 - **Bulk downloads** — parallel (polite, capped) downloads with atomic writes and

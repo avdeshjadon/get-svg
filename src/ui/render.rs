@@ -50,6 +50,7 @@ pub fn draw(f: &mut Frame, app: &App) {
     match app.screen {
         Screen::Home => draw_home(f, body, app),
         Screen::SearchInput => draw_search_input(f, body, app),
+        Screen::DownloadInput => draw_download_input(f, body, app),
         Screen::Searching => draw_searching(f, body, app),
         Screen::Results => draw_results(f, body, app),
         Screen::Details => draw_details(f, body, app),
@@ -81,6 +82,7 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
             crate::TAGLINE
         ),
         Screen::SearchInput => "Search Wikimedia Commons".to_string(),
+        Screen::DownloadInput => "Download a file".to_string(),
         Screen::Searching => format!("Search: {}", app.search_query),
         Screen::Results | Screen::Details => format!("Search: {}", app.search_query),
         Screen::Downloads => "Downloads".to_string(),
@@ -130,6 +132,7 @@ fn footer_hint(app: &App) -> Vec<Span<'static>> {
     match app.screen {
         Screen::Home => {
             s.extend(key_span(t, "↑↓", "Navigate"));
+            s.extend(key_span(t, "d", "Download a file"));
             s.extend(key_span(t, "Enter", "Select"));
             s.extend(key_span(t, "/", "Search"));
             s.extend(key_span(t, "?", "Help"));
@@ -137,6 +140,10 @@ fn footer_hint(app: &App) -> Vec<Span<'static>> {
         }
         Screen::SearchInput => {
             s.extend(key_span(t, "Enter", "Search"));
+            s.extend(key_span(t, "Esc", "Cancel"));
+        }
+        Screen::DownloadInput => {
+            s.extend(key_span(t, "Enter", "Download"));
             s.extend(key_span(t, "Esc", "Cancel"));
         }
         Screen::Searching => {
@@ -224,11 +231,12 @@ fn draw_too_small(f: &mut Frame, area: Rect) {
 
 fn draw_home(f: &mut Frame, area: Rect, app: &App) {
     let t = &app.theme;
-    // Split vertically: logo block / menu
+    // Split vertically: logo block / menu / tip
     let chunks = Layout::vertical([
         Constraint::Length(13),
         Constraint::Length(1),
         Constraint::Min(0),
+        Constraint::Length(2),
     ])
     .split(area);
 
@@ -253,11 +261,12 @@ fn draw_home(f: &mut Frame, area: Rect, app: &App) {
         let marker = if i == app.menu_index { "› " } else { "  " };
         let prefix: char = match i {
             0 => 'S',
-            1 => 'C',
-            2 => 'D',
-            3 => 'R',
-            4 => 'T',
-            5 => 'H',
+            1 => 'D',
+            2 => 'C',
+            3 => 'M',
+            4 => 'R',
+            5 => 'T',
+            6 => 'H',
             _ => 'Q',
         };
         let text = Line::from(vec![
@@ -296,6 +305,64 @@ fn draw_home(f: &mut Frame, area: Rect, app: &App) {
     );
     let mut state = app.list_state_menu();
     f.render_stateful_widget(list, chunks[2], &mut state);
+
+    // Download tip row, kept short so it fits narrow terminals.
+    let tip = Line::from(vec![
+        Span::styled("Tip: ", t.bold_accent()),
+        Span::styled("Search → results me ", t.dim_style()),
+        Span::styled("d", t.accent_style()),
+        Span::styled(" = Download, ", t.dim_style()),
+        Span::styled("A", t.accent_style()),
+        Span::styled(" = all, ", t.dim_style()),
+        Span::styled("z", t.accent_style()),
+        Span::styled(" = ZIP.", t.dim_style()),
+    ])
+    .alignment(Alignment::Left);
+    let tip_para = Paragraph::new(tip).style(t.dim_style());
+    f.render_widget(tip_para, chunks[3]);
+}
+
+fn draw_download_input(f: &mut Frame, area: Rect, app: &App) {
+    let t = &app.theme;
+    let chunks = Layout::vertical([
+        Constraint::Length(3),
+        Constraint::Length(1),
+        Constraint::Length(3),
+        Constraint::Min(0),
+    ])
+    .split(area);
+
+    let display = if app.input.is_empty() {
+        Line::from(Span::styled(
+            "Enter a file name (e.g. Flag_of_India.svg)…",
+            t.dim_style(),
+        ))
+    } else {
+        Line::from(Span::styled(app.input.clone(), t.text_style()))
+    };
+    let input = Paragraph::new(display).block(
+        Block::bordered()
+            .title(Span::styled(
+                "Download a file from Wikimedia Commons",
+                t.title_style(),
+            ))
+            .border_style(t.border_active_style()),
+    );
+    f.render_widget(input, chunks[0]);
+
+    let cursor_line = chunks[0];
+    let x = cursor_x(&app.input);
+    f.set_cursor_position((cursor_line.x + x + 1, cursor_line.y + 1));
+
+    let hint = Line::from(vec![
+        Span::styled("Download tip: ", t.dim_style()),
+        Span::styled("A name like ", t.text_style()),
+        Span::styled("\"GitHub-logo.svg\"", t.accent_style()),
+        Span::styled(" or a ", t.text_style()),
+        Span::styled("File:Title", t.accent_style()),
+        Span::styled(" works. Press Enter to download.", t.text_style()),
+    ]);
+    f.render_widget(hint, chunks[2]);
 }
 
 fn draw_search_input(f: &mut Frame, area: Rect, app: &App) {

@@ -13,7 +13,7 @@ use tokio_util::sync::CancellationToken;
 use super::keymap::Keymap;
 use super::render;
 use super::theme::Theme;
-use crate::api::WikimediaClient;
+use crate::api::{AssetProvider, WikimediaClient};
 use crate::cache::Cache;
 use crate::config::Settings;
 use crate::download::{estimated_bytes, BatchContext, BatchEvent, DownloadStats};
@@ -28,10 +28,11 @@ pub const MIN_WIDTH: u16 = 80;
 pub const MIN_HEIGHT: u16 = 24;
 
 /// Home menu entries.
-pub const MENU: [&str; 7] = [
+pub const MENU: [&str; 8] = [
     "Search",
+    "Download a file",
     "Browse Categories",
-    "Downloads",
+    "My Downloads",
     "Recent Searches",
     "Settings",
     "Help",
@@ -42,6 +43,7 @@ pub const MENU: [&str; 7] = [
 pub enum Screen {
     Home,
     SearchInput,
+    DownloadInput,
     Searching,
     Results,
     Details,
@@ -84,6 +86,9 @@ pub enum AppEvent {
     },
     ZipDone {
         result: Result<(PathBuf, usize, u64)>,
+    },
+    FileResolved {
+        result: Result<Box<Asset>>,
     },
 }
 
@@ -305,6 +310,7 @@ impl App {
         match self.screen {
             Screen::Home => self.on_key_home(key),
             Screen::SearchInput => self.on_key_search_input(key),
+            Screen::DownloadInput => self.on_key_download_input(key),
             Screen::Searching => {
                 if key.code == KeyCode::Esc {
                     self.cancel.cancel();
@@ -353,6 +359,10 @@ impl App {
             KeyCode::Down if self.menu_index + 1 < MENU.len() => {
                 self.menu_index += 1;
             }
+            KeyCode::Char('d') | KeyCode::Char('D') => {
+                self.screen = Screen::DownloadInput;
+                self.input = String::new();
+            }
             KeyCode::Enter => self.activate_menu(),
             _ => {}
         }
@@ -365,17 +375,46 @@ impl App {
                 self.input = String::new();
             }
             1 => {
+                self.screen = Screen::DownloadInput;
+                self.input = String::new();
+            }
+            2 => {
                 self.screen = Screen::SearchInput;
                 self.input = "incategory:".to_string();
             }
-            2 => self.screen = Screen::Downloads,
-            3 => {
+            3 => self.screen = Screen::Downloads,
+            4 => {
                 self.recent_index = 0;
                 self.screen = Screen::Recent;
             }
-            4 => self.screen = Screen::SettingsInfo,
-            5 => self.screen = Screen::Help,
-            6 => self.should_quit = true,
+            5 => self.screen = Screen::SettingsInfo,
+            6 => self.screen = Screen::Help,
+            7 => self.should_quit = true,
+            _ => {}
+        }
+    }
+
+    fn on_key_download_input(&mut self, key: KeyEvent) {
+        if self.keymap.matches(&key, self.keymap.back)
+            || self.keymap.matches(&key, self.keymap.quit)
+        {
+            self.screen = Screen::Home;
+            return;
+        }
+        match key.code {
+            KeyCode::Enter => {
+                let name = self.input.trim().to_string();
+                if name.is_empty() {
+                    return;
+                }
+                self.start_download_file(name);
+            }
+            KeyCode::Backspace => {
+                self.input.pop();
+            }
+            KeyCode::Char(c) => {
+                self.input.push(c);
+            }
             _ => {}
         }
     }
@@ -647,6 +686,9 @@ impl App {
             || self.keymap.matches(&key, self.keymap.back)
         {
             self.error = None;
+            if self.screen == Screen::DownloadInput {
+                return;
+            }
             if self.assets.is_empty() {
                 self.screen = Screen::Home;
             } else {
@@ -797,6 +839,31 @@ impl App {
                 query,
                 offset: 0,
                 result,
+            });
+        });
+    }
+
+    /// Resolve a user-supplied file name (or `File:Title`) to an asset, then
+    /// download it straight into the configured download directory.
+    fn start_download_file(&mut self, raw: String) {
+        self.search_query = format!("file: {raw}");
+        self.searching = true;
+        self.screen = Screen::Searching;
+        self.error = None;
+
+        let provider = self.provider.clone();
+        let cache = self.cache.clone();
+        let tx = self.tx.clone();
+        let cancel = self.cancel.child_token();
+
+        tokio::spawn(async move {
+            let result = tokio::select! {
+                biased;
+                _ = cancel.cancelled() => Err(Error::Cancelled),
+                res = resolve_file(&provider, &cache, &raw) => res,
+            };
+            let _ = tx.send(AppEvent::FileResolved {
+                result: result.map(Box::new),
             });
         });
     }
@@ -1321,6 +1388,31 @@ impl App {
                     zip.result = Some(result);
                 }
             }
+            AppEvent::FileResolved { result } => {
+                self.searching = false;
+                match result {
+                    Ok(asset) => {
+                        self.spawn_single_download(*asset);
+                    }
+                    Err(Error::Cancelled) => {
+                        self.status = "Download cancelled".into();
+                        self.screen = if self.assets.is_empty() {
+                            Screen::Home
+                        } else {
+                            Screen::Results
+                        };
+                    }
+                    Err(e) => {
+                        self.screen = Screen::DownloadInput;
+                        self.error = Some(ErrorState {
+                            title: "File not found".into(),
+                            message: e.friendly(),
+                            can_retry: false,
+                            can_cache: false,
+                        });
+                    }
+                }
+            }
         }
     }
 
@@ -1452,6 +1544,37 @@ fn open_url(url: &str) -> Result<()> {
     let spawn = cmd.spawn().map(|_| ());
     spawn.map_err(|e| Error::Other(format!("could not launch browser: {e}")))?;
     Ok(())
+}
+
+/// Resolve a user-supplied file name / `File:Title` to an `Asset`, mirroring
+/// the `download` subcommand: exact lookup first, title search as a fallback
+/// so `Giraffe-logo.svg` and `github-logo` both work.
+async fn resolve_file(provider: &WikimediaClient, cache: &Cache, raw: &str) -> Result<Asset> {
+    let title = if raw.starts_with("File:") || raw.starts_with("file:") {
+        raw.to_string()
+    } else if raw.ends_with(".svg") && !raw.contains('/') {
+        format!("File:{raw}")
+    } else {
+        raw.to_string()
+    };
+
+    if let Some(asset) = provider.get_asset(&title).await? {
+        return Ok(asset);
+    }
+
+    let found = search::fetch_page(provider, cache, &title, 0, 5).await?;
+    found
+        .page
+        .assets
+        .into_iter()
+        .find(|a| {
+            a.original_name.eq_ignore_ascii_case(&title) || a.title.eq_ignore_ascii_case(&title)
+        })
+        .ok_or_else(|| {
+            Error::Other(format!(
+                "no file named \"{title}\" was found on Wikimedia Commons"
+            ))
+        })
 }
 
 /// Entry point used by `commands::dispatch`.
