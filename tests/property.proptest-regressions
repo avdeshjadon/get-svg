@@ -5,3 +5,4 @@
 # It is recommended to check this file in to source control so that
 # everyone who runs the test benefits from these saved cases.
 cc 19fd362197ce3a18e9719129360a7277ee3ddf11a495f226a95ba507fe9ecba7 # shrinks to bytes = [10]
+cc 5b95faf6f934fa3ec60890ac28e0a529b5b01fced49d80c9412e2605b7fd03aa # shrinks to name = "𛅕0𐴰®¡0AA𜰀A 𐺰Σ￼ᥰ0🉀0ぁ\u{bd7}a ®ቚ 0ﯓ0 લ A౷𞹛\u{113c5}0ຌ0𑌲\u{10efc}𞟰AぁA\u{1e008}aA  ￼a￼ a𞹑ඳa𐳀A🌀aA 𛅰 ® 0প 𝒮0𝋠A￼ ®ଡ଼A𞥐 a‐A←AA0𐌀 ꭰ  \u{2000}.① 🌀ಪA \u{abc}"

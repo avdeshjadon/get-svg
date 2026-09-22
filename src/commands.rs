@@ -154,6 +154,8 @@ struct SearchArgs {
 }
 
 async fn cmd_search(args: SearchArgs) -> Result<i32> {
+    let has_download = args.download.is_some();
+    let has_zip = args.zip.is_some();
     let mut settings = Settings::load()?;
     if let Some(c) = args.concurrency {
         settings.max_concurrency = c.clamp(1, 32);
@@ -253,6 +255,15 @@ async fn cmd_search(args: SearchArgs) -> Result<i32> {
     let mut lock = stdout.lock();
     write_assets(&mut lock, args.format, &args.query, total_hits, &assets)?;
     lock.flush()?;
+
+    // Show a clear download shortcut when the user did not ask to save files.
+    if !has_download && !has_zip && std::io::stderr().is_terminal() {
+        eprintln!(
+            "\u{2139} Results are printed above. To save them:\n    get-svg search \"{}\" --download DIR\n    get-svg search \"{}\" --zip OUT.zip\n  In the interactive UI (run `get-svg`), use `d` / `A` / `z` on the results screen.",
+            args.query.trim(),
+            args.query.trim(),
+        );
+    }
 
     Ok(exit_code)
 }
