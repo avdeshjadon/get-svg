@@ -215,12 +215,13 @@ pub fn safe_join(base: &Path, name: &str) -> Result<PathBuf> {
     if !joined.starts_with(&base_abs) {
         return Err(Error::UnsafePath(name.to_string()));
     }
-    // Belt and braces: reject anything that still walks out lexically.
+    // Belt and braces: reject anything that still walks out lexically. Note
+    // the prefix component is *not* rejected here: on Windows every absolute
+    // path carries a drive/UNC prefix, and `starts_with` above already proved
+    // it is the base's own prefix.
     for comp in joined.components() {
-        match comp {
-            Component::ParentDir => return Err(Error::UnsafePath(name.to_string())),
-            Component::Prefix(_) => return Err(Error::UnsafePath(name.to_string())),
-            _ => {}
+        if let Component::ParentDir = comp {
+            return Err(Error::UnsafePath(name.to_string()));
         }
     }
     Ok(joined)
