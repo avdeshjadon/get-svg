@@ -24,7 +24,7 @@ cargo build
 cargo test --all
 ```
 
-The crate requires Rust 1.85+ (`rust-version` in `Cargo.toml`).
+The crate requires Rust 1.88+ (`rust-version` in `Cargo.toml`).
 
 ## What must pass
 

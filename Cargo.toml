@@ -2,7 +2,7 @@
 name = "get-svg"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.88"
 authors = ["Avdesh Jadon <avdeshyadav15@gmail.com>"]
 description = "Discover, inspect, and download SVG assets from Wikimedia Commons from your terminal."
 license = "MIT OR Apache-2.0"
