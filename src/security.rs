@@ -288,10 +288,13 @@ mod tests {
 
     #[test]
     fn safe_join_contains_paths() {
-        let base = Path::new("/tmp/out");
-        let p = safe_join(base, "../../etc/passwd").unwrap();
-        assert!(p.starts_with(base), "{p:?}");
-        assert!(safe_join(base, "ok.svg").unwrap().ends_with("ok.svg"));
+        // `temp_dir()` is absolute on every platform (unlike `/tmp`).
+        let base = std::env::temp_dir();
+        let p = safe_join(base.as_path(), "../../etc/passwd").unwrap();
+        assert!(p.starts_with(&base), "{p:?}");
+        assert!(safe_join(base.as_path(), "ok.svg")
+            .unwrap()
+            .ends_with("ok.svg"));
     }
 
     #[test]

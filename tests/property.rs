@@ -27,9 +27,11 @@ proptest! {
     /// Joins always stay inside the base directory.
     #[test]
     fn safe_join_never_escapes(name in "\\PC{1,80}") {
-        let base = std::path::Path::new("/tmp/out");
-        if let Ok(joined) = safe_join(base, &name) {
-            prop_assert!(joined.starts_with(base));
+        // `temp_dir()` is absolute on every platform, so the containment
+        // check is meaningful on Windows as well as Unix.
+        let base = std::env::temp_dir();
+        if let Ok(joined) = safe_join(&base, &name) {
+            prop_assert!(joined.starts_with(&base));
         }
     }
 
