@@ -1,16 +1,17 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
-# get-svg — one-line installer.
+# get-svg — one-line installer (POSIX sh: macOS, Linux, Windows Git Bash).
 #
 #   macOS / Linux / Windows-Git-Bash:
 #     curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh
 #
-#   Pin a specific version:
-#     curl -fsSL .../install.sh | GET_SVG_VERSION=v0.1.0 sh
+#   Install somewhere else:
 #     curl -fsSL .../install.sh | sh -s -- --dir "$HOME/bin"
 #
-# Installs the official release binary (SHA-256 verified) for your OS + CPU.
-set -euo pipefail
+# Always installs the latest release automatically (or pin with
+# GET_SVG_VERSION, e.g. GET_SVG_VERSION=v0.1.0). Both `get-svg` and the
+# `getsvg` alias are installed to ~/.local/bin (or --dir), SHA-256 verified.
+set -eu
 
 REPO="avdeshjadon/get-svg"
 BIN="get-svg"
@@ -22,49 +23,52 @@ while [ "$#" -gt 0 ]; do
     --dir) DIR="$2"; shift 2 ;;
     --dir=*) DIR="${1#*=}"; shift ;;
     -h|--help) echo "usage: install.sh [--dir DIR]  (or set INSTALL_DIR / GET_SVG_VERSION)"; exit 0 ;;
-    *) echo "unknown argument: $1" >&2; exit 1 ;;
+    *) echo "install.sh: unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 [ -n "$DIR" ] || DIR="${HOME}/.local/bin"
 
+command -v curl >/dev/null 2>&1 || { echo "error: curl is required" >&2; exit 1; }
+
 # --- platform detection ---------------------------------------------------
-OS="$(uname -s)"
-ARCH="$(uname -m)"
+ARCH="$(uname -m 2>/dev/null || echo unknown)"
+OS="$(uname -s 2>/dev/null || echo unknown)"
 
 case "$OS" in
   Darwin)
     case "$ARCH" in
       arm64|aarch64) TARGET="aarch64-apple-darwin" ;;
       x86_64|amd64)  TARGET="x86_64-apple-darwin" ;;
-      *) echo "unsupported Apple CPU: $ARCH" >&2; exit 1 ;;
+      *) echo "error: unsupported Apple CPU: $ARCH" >&2; exit 1 ;;
     esac
     EXT="tar.gz"
     ;;
   Linux)
     case "$ARCH" in
       x86_64|amd64) TARGET="x86_64-unknown-linux-gnu" ;;
-      *) echo "unsupported Linux CPU: $ARCH (only x86_64 CI builds)" >&2; exit 1 ;;
+      *) echo "error: unsupported Linux CPU: $ARCH (only x86_64 builds)" >&2; exit 1 ;;
     esac
     EXT="tar.gz"
     ;;
   MINGW*|MSYS*|CYGWIN*)
     case "$ARCH" in
       x86_64|amd64) TARGET="x86_64-pc-windows-msvc" ;;
-      *) echo "unsupported Windows CPU: $ARCH" >&2; exit 1 ;;
+      *) echo "error: unsupported Windows CPU: $ARCH" >&2; exit 1 ;;
     esac
     EXT="zip"
     ;;
   *)
-    echo "unsupported OS: $OS" >&2
+    echo "error: unsupported OS: $OS" >&2
     exit 1
     ;;
 esac
 
-# --- resolve version (latest -> concrete tag) -----------------------------
+# --- resolve latest release tag -------------------------------------------
 if [ "$VERSION" = "latest" ]; then
-  echo "> resolving latest release for $REPO ..." >&2
+  echo "> resolving latest release ..." >&2
   VERSION="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
-    | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
+    | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
+    | sed -n '1p')"
   if [ -z "$VERSION" ]; then
     echo "error: could not determine the latest release tag" >&2
     exit 1
@@ -74,26 +78,24 @@ fi
 BASE_URL="https://github.com/$REPO/releases/download/$VERSION"
 ARTIFACT="$BIN-$TARGET.$EXT"
 
-# --- download + verify ----------------------------------------------------
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/get-svg.XXXXXX")"
-trap 'rm -rf "$TMP"' EXIT
+trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 
 echo "> downloading $ARTIFACT ($VERSION) ..." >&2
 curl -fsSL -o "$TMP/$ARTIFACT" "$BASE_URL/$ARTIFACT"
 curl -fsSL -o "$TMP/$ARTIFACT.sha256" "$BASE_URL/$ARTIFACT.sha256"
 
+# --- verify SHA-256 --------------------------------------------------------
 sha256_file() {
   if command -v sha256sum >/dev/null 2>&1; then
     ( cd "$TMP" && sha256sum "$1" | awk '{print $1}' )
   elif command -v shasum >/dev/null 2>&1; then
     ( cd "$TMP" && shasum -a 256 "$1" | awk '{print $1}' )
   else
-    echo "error: no sha256 checksum tool (sha256sum/shasum) available" >&2
+    echo "error: no SHA-256 tool (sha256sum / shasum) available" >&2
     exit 1
   fi
 }
-
-( cd "$TMP" && sha256_file "$ARTIFACT" >/dev/null 2>&1 ) || { echo "error: no checksum tool available" >&2; exit 1; }
 EXPECTED="$(awk '{print $1}' "$TMP/$ARTIFACT.sha256")"
 ACTUAL="$(sha256_file "$ARTIFACT")"
 if [ "$EXPECTED" != "$ACTUAL" ]; then
@@ -112,22 +114,23 @@ else
   tar -xzf "$TMP/$ARTIFACT" -C "$EXTRACTED"
 fi
 
-BINARY="$(find "$EXTRACTED" -type f -name "$BIN" -o -type f -name "$BIN.exe" | head -n1)"
-[ -n "$BINARY" ] || { echo "error: $(basename "$ARTIFACT") did not contain a $BIN binary" >&2; exit 1; }
-
 # --- install ---------------------------------------------------------------
 mkdir -p "$DIR"
-install -m 755 "$BINARY" "$DIR/$BIN"
-echo "> installed $DIR/$BIN ($VERSION)" >&2
+for NAME in "$BIN" "getsvg"; do
+  BINPATH="$(find "$EXTRACTED" -type f -name "$NAME" -o -type f -name "$NAME.exe" 2>/dev/null | sed -n '1p')"
+  [ -n "$BINPATH" ] || { echo "error: archive did not contain a $NAME binary" >&2; exit 1; }
+  install -m 755 "$BINPATH" "$DIR/$NAME"
+  echo "> installed $DIR/$NAME ($VERSION)" >&2
+done
 
 if [ -x "$DIR/$BIN" ]; then
-  "$DIR/$BIN" --version >/dev/null 2>&1 && echo "> $($DIR/$BIN --version)" >&2 \
-    || echo "note: installed, but --version check failed ($OS)" >&2
+  "$DIR/$BIN" --version >/dev/null 2>&1 && echo "> $($DIR/$BIN --version)" >&2 || true
 fi
 
 case ":$PATH:" in
   *":$DIR:"*) : ;;
-  *) echo "> add to your PATH: export PATH=\"$DIR:\$PATH\"" >&2 ;;
+  *) echo "> add $DIR to your PATH, e.g.: export PATH=\"$DIR:\$PATH\"" >&2 ;;
 esac
 
-echo "$DIR/$BIN"
+echo "> done. Try:  getsvg --help   or just:  getsvg"
+echo "$DIR"

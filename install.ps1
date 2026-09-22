@@ -54,12 +54,13 @@ try {
     $extract = Join-Path $tmp 'extracted'
     Expand-Archive -Path (Join-Path $tmp $artifact) -DestinationPath $extract -Force
 
-    $binary = Get-ChildItem -Path $extract -Recurse -Filter "$bin.exe" | Select-Object -First 1
-    if (-not $binary) { throw "archive did not contain $bin.exe" }
-
-    New-Item -ItemType Directory -Path $destDir -Force | Out-Null
-    Copy-Item -Path $binary.FullName -Destination (Join-Path $destDir "$bin.exe") -Force
-    Write-Host "> installed $(Join-Path $destDir "$bin.exe") ($version)"
+    foreach ($exe in @("$bin.exe", 'getsvg.exe')) {
+        $binary = Get-ChildItem -Path $extract -Recurse -Filter $exe | Select-Object -First 1
+        if (-not $binary) { throw "archive did not contain $exe" }
+        New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+        Copy-Item -Path $binary.FullName -Destination (Join-Path $destDir $exe) -Force
+        Write-Host "> installed $(Join-Path $destDir $exe) ($version)"
+    }
 }
 finally {
     Remove-Item -Path $tmp -Recurse -Force -ErrorAction SilentlyContinue
@@ -71,4 +72,4 @@ if (-not $inPath) {
     Write-Host "> add to your PATH (then open a new terminal):"
     Write-Host "    [Environment]::SetEnvironmentVariable('PATH', [Environment]::GetEnvironmentVariable('PATH','User') + ';$destDir', 'User')"
 }
-Write-Host "> done: $destDir\get-svg.exe"
+Write-Host "> done. Try:  getsvg --help   or just:  getsvg"

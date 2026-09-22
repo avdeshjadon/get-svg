@@ -31,10 +31,7 @@ for your OS + CPU and verify its SHA-256 checksum before installing to
 `~/.local/bin`:
 
 ```sh
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh
-
-# Windows Git Bash / MSYS
+# macOS / Linux / Windows Git Bash / MSYS
 curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh
 ```
 
@@ -44,21 +41,16 @@ Set-ExecutionPolicy -Scope Process Bypass
 irm https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.ps1 | iex
 ```
 
-Pin a specific version, or install somewhere else:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | sh -s -- --dir "$HOME/bin"
-curl -fsSL https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.sh | GET_SVG_VERSION=v0.1.0 sh
-```
-
-```powershell
-$env:GET_SVG_VERSION = 'v0.1.0'
-irm https://raw.githubusercontent.com/avdeshjadon/get-svg/main/install.ps1 | iex
-```
-
-> The installers print the directory to add to your `PATH` — it is not added
-> automatically. Re-run with a `--dir`/`INSTALL_DIR` override to choose the
-> location.
+- The latest release is resolved automatically — no version to remember. To pin
+  one anyway, set `GET_SVG_VERSION=v0.1.0` (or `$env:GET_SVG_VERSION`).
+- The installer puts **both** the `get-svg` binary and a `getsvg` shortcut into
+  `~/.local/bin`. After it finishes (and you add the printed directory to your
+  `PATH`) just type `getsvg` to launch the interactive interface, or
+  `getsvg --help` for the full command list.
+- Linux builds target the GNU C library (glibc ≥ 2.31, e.g. Ubuntu 20.04+,
+  Debian 11+). macOS binaries are unsigned — install via the command line
+  (curl) to avoid Gatekeeper prompts.
+- Re-run with `--dir "$HOME/bin"` / `INSTALL_DIR` to install somewhere else.
 
 ### From source
 
