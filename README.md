@@ -107,6 +107,14 @@ Self-diagnose environment, network, and config:
 get-svg doctor
 ```
 
+Update to the latest release (downloads the matching binary, verifies its
+SHA-256, swaps `get-svg`/`getsvg` in place, and removes old binaries and
+leftover `.old` files):
+
+```sh
+getsvg update
+```
+
 ## Command reference
 
 Run `get-svg <command> --help` for the authoritative flag list. Overview:
@@ -121,6 +129,7 @@ Run `get-svg <command> --help` for the authoritative flag list. Overview:
 | `config`     | Show the effective config; `--init` writes a default file. |
 | `doctor`     | Environment/network/config diagnostics (`--json`). |
 | `version`    | Print version info.                                |
+| `update`     | Download + install the latest release in place.    |
 
 Interactive keyboard map (see the `?` help screen in-app):
 

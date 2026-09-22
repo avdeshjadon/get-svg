@@ -116,6 +116,7 @@ pub async fn dispatch(cli: Cli) -> Result<i32> {
                 cmd_version();
                 Ok(0)
             }
+            Command::Update => crate::update::run_update().await,
         },
     }
 }

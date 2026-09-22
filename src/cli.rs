@@ -173,6 +173,13 @@ pub enum Command {
 
     /// Print version information.
     Version,
+
+    /// Download and install the latest release, replacing this binary.
+    ///
+    /// Verifies the download with SHA-256, swaps `get-svg`/`getsvg` in place,
+    /// and removes old binaries and leftover `.old` files. Uses the GitHub
+    /// releases API pointed at this project unless `GET_SVG_UPDATE_REPO` is set.
+    Update,
 }
 
 #[derive(Debug, Subcommand)]

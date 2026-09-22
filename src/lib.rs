@@ -23,6 +23,7 @@ pub mod output;
 pub mod search;
 pub mod security;
 pub mod ui;
+pub mod update;
 
 /// Crate version, used for User-Agent strings and `version` output.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

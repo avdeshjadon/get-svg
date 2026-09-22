@@ -1,6 +1,6 @@
 [package]
 name = "get-svg"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.88"
 authors = ["Avdesh Jadon <avdeshyadav15@gmail.com>"]
@@ -55,6 +55,8 @@ indicatif = "0.17"
 
 # --- files / archives ------------------------------------------------------
 zip = { version = "2", default-features = false, features = ["deflate"] }
+flate2 = "1"
+tar = "0.4"
 tempfile = "3"
 
 # --- misc ------------------------------------------------------------------
