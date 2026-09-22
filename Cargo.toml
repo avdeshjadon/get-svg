@@ -1,6 +1,6 @@
 [package]
 name = "get-svg"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.88"
 authors = ["Avdesh Jadon <avdeshyadav15@gmail.com>"]
