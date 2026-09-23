@@ -127,7 +127,8 @@ impl WikimediaClient {
         .iter()
         .any(|op| trimmed.to_lowercase().starts_with(op));
         let file = trimmed.to_lowercase().starts_with("file:");
-        if single && !operator && !file && trimmed.len() >= 2 {
+        let slug = trimmed.to_lowercase().ends_with(".svg");
+        if single && !operator && !file && !slug && trimmed.len() >= 2 {
             format!("intitle:{trimmed}")
         } else {
             trimmed.to_string()
@@ -139,7 +140,7 @@ impl WikimediaClient {
         let mut parts: Vec<String> = Vec::new();
         let q = query.trim();
         if !q.is_empty() {
-            parts.push(Self::title_boost(q));
+            parts.push(WikimediaClient::title_boost(q));
         }
         if let Some(extra) = extra {
             let extra = extra.trim();
@@ -428,11 +429,17 @@ mod tests {
 
     #[test]
     fn title_boost_scopes_single_bare_token() {
-        assert_eq!(Self::title_boost("github"), "intitle:github");
-        assert_eq!(Self::title_boost("Github Logo"), "Github Logo");
-        assert_eq!(Self::title_boost("intitle:logos"), "intitle:logos");
-        assert_eq!(Self::title_boost("file:flag_of_india.svg"), "file:flag_of_india.svg");
-        assert_eq!(Self::title_boost("github.svg"), "github.svg");
+        assert_eq!(WikimediaClient::title_boost("github"), "intitle:github");
+        assert_eq!(WikimediaClient::title_boost("Github Logo"), "Github Logo");
+        assert_eq!(
+            WikimediaClient::title_boost("intitle:logos"),
+            "intitle:logos"
+        );
+        assert_eq!(
+            WikimediaClient::title_boost("file:flag_of_india.svg"),
+            "file:flag_of_india.svg"
+        );
+        assert_eq!(WikimediaClient::title_boost("github.svg"), "github.svg");
     }
 
     #[test]
