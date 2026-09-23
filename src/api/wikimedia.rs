@@ -427,6 +427,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn title_boost_scopes_single_bare_token() {
+        assert_eq!(Self::title_boost("github"), "intitle:github");
+        assert_eq!(Self::title_boost("Github Logo"), "Github Logo");
+        assert_eq!(Self::title_boost("intitle:logos"), "intitle:logos");
+        assert_eq!(Self::title_boost("file:flag_of_india.svg"), "file:flag_of_india.svg");
+        assert_eq!(Self::title_boost("github.svg"), "github.svg");
+    }
+
+    #[test]
     fn compose_search_appends_svg_filter() {
         assert_eq!(
             WikimediaClient::compose_search("github", None),

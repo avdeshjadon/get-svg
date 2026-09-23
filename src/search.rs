@@ -15,7 +15,16 @@ pub struct FetchedPage {
 
 /// Cache key for a query/offset pair.
 fn cache_key(query: &str, offset: u64) -> String {
-    format!("{}@{offset}", query.trim().to_lowercase())
+    // Normalize the *effective* search string (title-boost etc.) into the key
+    // so that changing ranking semantics busts stale cache entries instead of
+    // silently serving old results.
+    let boost = api::wikimedia::WikimediaClient::compose_search(query, None)
+        .trim()
+        .to_lowercase();
+    // Fall back through whitespace collapse just in case the boost was a no-op.
+    let normalized = if boost.is_empty() { query.trim() } else { boost.as_str() };
+    let joined = normalized.split_whitespace().collect::<Vec<_>>().join(" ");
+    format!("{joined}@{offset}")
 }
 
 /// Fetch one page of results, reading from cache first when enabled.
