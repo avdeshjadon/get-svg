@@ -24,6 +24,24 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses
 - The `d`/`D` home shortcut now correctly routes through search semantics
   instead of a leftover `DownloadInput` path mapping.
 
+## [Unreleased]
+
+### Changed
+- **Minimal search-first TUI.** Launching `getsvg` now opens the search box
+  directly — no Home menu, no Help/Quit/My Downloads/Recent/Settings/Extra
+  entries. Search results render with just two actions below the list:
+  **Download Manually** and **Download as ZIP**.
+- **Download Manually** opens a clean check-box screen: `Space` toggles SVGs,
+  `Enter` downloads only the selected ones (individually, into the configured
+  download folder).
+- **Download as ZIP** collects every result into one archive
+  (e.g. `Amazon` → `amazon-svg.zip`) with no per-file selection.
+- Exact-filename behaviour removed from the interactive search: keywords like
+  `Amazon` (no `.svg` needed) return related SVGs, and a trailing `.svg` is
+  stripped from single-token queries (`Amazon.svg` searches like `Amazon`).
+- Detail / single-download / recent-searches / settings / help screens removed
+  to keep the tool focused on search + download.
+
 ## [0.2.1] - 2026-09-21
 
 ### Added

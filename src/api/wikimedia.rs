@@ -111,7 +111,8 @@ impl WikimediaClient {
     }
 
     /// Tune the ranking of a single-token query: a bare word is usually meant as
-    /// a file name or brand term (`github`, `amazon`), so scope it to titles.
+    /// a brand/term (`github`, `amazon`), so scope it to titles. A trailing
+    /// `.svg` extension is dropped so users never have to type it exactly.
     /// Multi-word phrases and explicit operators are left untouched.
     fn title_boost(q: &str) -> String {
         let trimmed = q.trim();
@@ -127,11 +128,18 @@ impl WikimediaClient {
         .iter()
         .any(|op| trimmed.to_lowercase().starts_with(op));
         let file = trimmed.to_lowercase().starts_with("file:");
-        let slug = trimmed.to_lowercase().ends_with(".svg");
-        if single && !operator && !file && !slug && trimmed.len() >= 2 {
-            format!("intitle:{trimmed}")
+        if !single || operator || file {
+            return trimmed.to_string();
+        }
+        let cleaned = if trimmed.to_lowercase().ends_with(".svg") {
+            &trimmed[..trimmed.len() - ".svg".len()]
         } else {
-            trimmed.to_string()
+            trimmed
+        };
+        if cleaned.len() >= 2 {
+            format!("intitle:{cleaned}")
+        } else {
+            cleaned.to_string()
         }
     }
 
@@ -439,7 +447,8 @@ mod tests {
             WikimediaClient::title_boost("file:flag_of_india.svg"),
             "file:flag_of_india.svg"
         );
-        assert_eq!(WikimediaClient::title_boost("github.svg"), "github.svg");
+        assert_eq!(WikimediaClient::title_boost("github.svg"), "intitle:github");
+        assert_eq!(WikimediaClient::title_boost("amazon"), "intitle:amazon");
     }
 
     #[test]

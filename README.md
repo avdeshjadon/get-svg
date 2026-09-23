@@ -10,11 +10,10 @@ and a rate limiter that stays polite toward Wikimedia's shared infrastructure.
 
 ## Features
 
-- **Interactive TUI** — search, preview, multi-select, live progress, attribution view.
-  The home screen offers a direct **Download a file** entry (or press `d`),
-  and the search box knows the difference: type a `File:...` or `xxx.svg`
-  and press Enter to download it straight away; anything else searches.
-  Results screens accept `d` / `A` / `z` for download/ZIP.
+- **Interactive TUI** — launch straight into search: type a keyword like
+  `Amazon` (no `.svg` extension needed) and get relevant SVG results, then
+  either **Download Manually** (check-box selection screen) or **Download as
+  ZIP** (one archive of every result). No menus, no home screen.
 - **Scriptable CLI** — `search`, `category`, `batch`, `download`, `config`, `cache`, `doctor`.
   `--format table|json|jsonl` for pipelines.
 - **Bulk downloads** — parallel (polite, capped) downloads with atomic writes and
@@ -135,20 +134,15 @@ Run `get-svg <command> --help` for the authoritative flag list. Overview:
 | `version`    | Print version info.                                |
 | `update`     | Download + install the latest release in place.    |
 
-Interactive keyboard map (see the `?` help screen in-app):
+Interactive keyboard map (built into the footer hints):
 
 | Key | Action |
 | --- | ------ |
-| `/` | Search / filter current list |
-| `d` | Download selected file |
-| `A` | Download all results |
-| `z` | Pack results into a ZIP |
-| `a` | Select / deselect all |
-| ` ` | Toggle selection |
-| `c` | Copy to clipboard |
-| `o` | Open description page in browser |
-| `r` | Refresh (bypass cache) |
-| `q` | Quit |
+| Search input | Type a keyword, `Enter` to search, `Esc` to clear |
+| Results | `↑↓` navigate, `Space` toggle, `Enter` open action, `Esc` new search |
+| `⬇ Download Manually` | Select screen: `Space` toggle, `Enter` download selected |
+| `⬇ Download as ZIP` | Packs every result into one ZIP |
+| `q` / `Ctrl+C` | Quit |
 
 ## Configuration
 
