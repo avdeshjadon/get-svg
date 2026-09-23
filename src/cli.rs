@@ -174,6 +174,18 @@ pub enum Command {
     /// Print version information.
     Version,
 
+    /// Completely remove GET SVG from this system.
+    ///
+    /// Deletes the config (settings, cache, recent searches), the default
+    /// `get-svg` download folder, and the installed `get-svg`/`getsvg`
+    /// binaries — leaving no trace. A custom download directory is left
+    /// untouched unless its name is `get-svg`.
+    Dlt {
+        /// Skip the confirmation prompt.
+        #[arg(long, short = 'y')]
+        yes: bool,
+    },
+
     /// Download and install the latest release, replacing this binary.
     ///
     /// Verifies the download with SHA-256, swaps `get-svg`/`getsvg` in place,
@@ -258,5 +270,11 @@ mod tests {
     fn global_debug_flag() {
         let cli = Cli::parse_from(["get-svg", "--debug", "version"]);
         assert!(cli.debug);
+    }
+
+    #[test]
+    fn parses_dlt_with_yes() {
+        let cli = Cli::parse_from(["get-svg", "dlt", "--yes"]);
+        assert!(matches!(cli.command, Some(Command::Dlt { yes: true })));
     }
 }

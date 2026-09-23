@@ -42,6 +42,13 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses
 - Detail / single-download / recent-searches / settings / help screens removed
   to keep the tool focused on search + download.
 
+### Added
+- `getsvg dlt` — full uninstall: removes the config directory (settings,
+  cache, recent searches), the default `~/Downloads/get-svg` folder, and the
+  `get-svg`/`getsvg` binaries so a fresh start behaves like a brand new
+  install. Custom download directories are never wiped automatically.
+  `--yes` skips the confirmation prompt.
+
 ## [0.2.1] - 2026-09-21
 
 ### Added

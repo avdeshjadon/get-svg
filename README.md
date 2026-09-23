@@ -133,6 +133,7 @@ Run `get-svg <command> --help` for the authoritative flag list. Overview:
 | `doctor`     | Environment/network/config diagnostics (`--json`). |
 | `version`    | Print version info.                                |
 | `update`     | Download + install the latest release in place.    |
+| `dlt`        | Completely remove GET SVG (config, cache, downloads, binaries). |
 
 Interactive keyboard map (built into the footer hints):
 
@@ -143,6 +144,15 @@ Interactive keyboard map (built into the footer hints):
 | `⬇ Download Manually` | Select screen: `Space` toggle, `Enter` download selected |
 | `⬇ Download as ZIP` | Packs every result into one ZIP |
 | `q` / `Ctrl+C` | Quit |
+
+Uninstall completely — deletes config, cache, recent searches, the default
+`~/Downloads/get-svg` folder, and the `get-svg`/`getsvg` binaries themselves
+(leaves a custom download directory untouched unless it is named `get-svg`):
+
+```sh
+getsvg dlt          # asks for confirmation
+getsvg dlt --yes    # non-interactive
+```
 
 ## Configuration
 

@@ -23,6 +23,7 @@ pub mod output;
 pub mod search;
 pub mod security;
 pub mod ui;
+pub mod uninstall;
 pub mod update;
 
 /// Crate version, used for User-Agent strings and `version` output.
