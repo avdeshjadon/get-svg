@@ -42,6 +42,13 @@ impl UninstallPlan {
 
 /// Derive the plan (no filesystem writes).
 pub fn collect_plan(settings: &Settings) -> UninstallPlan {
+    collect_plan_with_exe(settings, std::env::current_exe().ok().as_deref())
+}
+
+/// Same as [`collect_plan`], but the running binary is supplied explicitly so
+/// tests can pin down binary discovery without depending on the ambient test
+/// environment (which varies across platforms and toolchains).
+fn collect_plan_with_exe(settings: &Settings, exe: Option<&Path>) -> UninstallPlan {
     let ext = if cfg!(windows) { ".exe" } else { "" };
 
     let config_dir = settings.config_dir.clone();
@@ -57,7 +64,7 @@ pub fn collect_plan(settings: &Settings) -> UninstallPlan {
     .then_some(settings.download_dir.clone());
 
     let mut binaries = Vec::new();
-    if let Ok(exe) = std::env::current_exe() {
+    if let Some(exe) = exe {
         if let Some(dir) = exe.parent() {
             for name in ["get-svg", "getsvg"] {
                 let path = dir.join(format!("{name}{ext}"));
@@ -243,7 +250,7 @@ mod tests {
         let cfg = dir.path().join("get-svg");
         let dl = dir.path().join("get-svg");
         std::fs::create_dir_all(&cfg).unwrap();
-        let plan = collect_plan(&settings_with(&cfg, &dl));
+        let plan = collect_plan_with_exe(&settings_with(&cfg, &dl), None);
         assert!(plan.config_dir.is_some());
         assert!(plan.download_dir.is_none()); // same path as config dir -> deduped
     }
@@ -255,7 +262,7 @@ mod tests {
         let dl = dir.path().join("dl").join("get-svg");
         std::fs::create_dir_all(&cfg).unwrap();
         std::fs::create_dir_all(&dl).unwrap();
-        let plan = collect_plan(&settings_with(&cfg, &dl));
+        let plan = collect_plan_with_exe(&settings_with(&cfg, &dl), None);
         assert!(plan.config_dir.is_some());
         assert!(plan.download_dir.is_some());
     }
@@ -267,7 +274,7 @@ mod tests {
         let custom = dir.path().join("my-icons");
         std::fs::create_dir_all(&cfg).unwrap();
         std::fs::create_dir_all(&custom).unwrap();
-        let plan = collect_plan(&settings_with(&cfg, &custom));
+        let plan = collect_plan_with_exe(&settings_with(&cfg, &custom), None);
         assert!(plan.download_dir.is_none());
     }
 
@@ -275,8 +282,27 @@ mod tests {
     fn no_trace_yields_empty_plan() {
         let dir = tempfile::tempdir().unwrap();
         let cfg = dir.path().join("get-svg");
-        let plan = collect_plan(&settings_with(&cfg, &cfg));
+        let plan = collect_plan_with_exe(&settings_with(&cfg, &cfg), None);
         assert!(plan.targets().is_empty());
+    }
+
+    #[test]
+    fn running_binary_and_siblings_are_found() {
+        let dir = tempfile::tempdir().unwrap();
+        let bindir = dir.path().join("bin");
+        std::fs::create_dir_all(&bindir).unwrap();
+        let ext = if cfg!(windows) { ".exe" } else { "" };
+        for name in ["get-svg", "getsvg"] {
+            std::fs::write(bindir.join(format!("{name}{ext}")), b"").unwrap();
+        }
+        let exe = bindir.join(format!("get-svg{ext}"));
+        let plan = collect_plan_with_exe(&settings_with(&bindir, &bindir), Some(&exe));
+        let names: Vec<String> = plan
+            .binaries
+            .iter()
+            .map(|b| b.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(names, vec![format!("get-svg{ext}"), format!("getsvg{ext}")]);
     }
 
     #[test]
