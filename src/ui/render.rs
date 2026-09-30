@@ -41,7 +41,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         Screen::SearchInput => draw_search_input(f, body, app),
         Screen::Searching => draw_searching(f, body, app),
         Screen::Results => draw_results(f, body, app),
-        Screen::Select => draw_select(f, body, app),
+        Screen::Details => draw_details(f, body, app),
         Screen::Downloading => draw_downloading(f, body, app),
     }
     draw_footer(f, layout[2], app);
@@ -64,7 +64,14 @@ fn draw_header(f: &mut Frame, area: Rect, app: &App) {
             app.search_query,
             app.assets.len()
         ),
-        Screen::Select => format!("Select SVGs — {}", app.search_query),
+        Screen::Details => {
+            let name = app
+                .assets
+                .get(app.detail_index)
+                .map(|a| a.original_name.as_str())
+                .unwrap_or("File");
+            format!("Details: {name}")
+        }
         Screen::Downloading => "Downloading".to_string(),
     };
     let text = format!(" {} › {title}", crate::APP_NAME);
@@ -110,15 +117,16 @@ fn footer_hint(app: &App) -> Vec<Span<'static>> {
         }
         Screen::Results => {
             s.extend(key_span(t, "↑↓", "Navigate"));
+            s.extend(key_span(t, "Enter", "Details & Download"));
+            s.extend(key_span(t, "z", "Download all as ZIP"));
             s.extend(key_span(t, "Space", "Select"));
-            s.extend(key_span(t, "Enter", "Choose"));
             s.extend(key_span(t, "Esc", "New search"));
             s.extend(key_span(t, "q", "Quit"));
         }
-        Screen::Select => {
-            s.extend(key_span(t, "Space", "Toggle"));
-            s.extend(key_span(t, "Enter", "Download"));
-            s.extend(key_span(t, "Esc", "Back"));
+        Screen::Details => {
+            s.extend(key_span(t, "Enter", "Download SVG"));
+            s.extend(key_span(t, "↑↓", "Prev/Next"));
+            s.extend(key_span(t, "Esc", "Back to results"));
             s.extend(key_span(t, "q", "Quit"));
         }
         Screen::Downloading => {
@@ -321,13 +329,18 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
         "─".repeat(32),
         t.dim_style(),
     ))));
+    if !app.selected.is_empty() {
+        items.push(ListItem::new(Line::from(vec![
+            Span::raw("     "),
+            Span::styled(
+                format!("⬇ Download selected ({})", app.selected.len()),
+                t.bold_accent(),
+            ),
+        ])));
+    }
     items.push(ListItem::new(Line::from(vec![
         Span::raw("     "),
-        Span::styled("⬇ Download Manually", t.bold_accent()),
-    ])));
-    items.push(ListItem::new(Line::from(vec![
-        Span::raw("     "),
-        Span::styled("⬇ Download as ZIP", t.bold_accent()),
+        Span::styled("⬇ Download all as ZIP (or press 'z')", t.bold_accent()),
     ])));
 
     let list = List::new(items)
@@ -337,58 +350,128 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
     f.render_stateful_widget(list, list_area, &mut state);
 }
 
-fn draw_select(f: &mut Frame, area: Rect, app: &App) {
+fn draw_details(f: &mut Frame, area: Rect, app: &App) {
     let t = &app.theme;
-    let block = Block::bordered()
+    let Some(asset) = app.assets.get(app.detail_index) else {
+        f.render_widget(Paragraph::new("No file selected."), area);
+        return;
+    };
+
+    let chunks = Layout::vertical([
+        Constraint::Min(0),
+        Constraint::Length(3),
+    ])
+    .split(area);
+
+    let mut lines = Vec::new();
+    let label = |k: &str| Span::styled(format!("{:<15}", k), t.bold_accent());
+
+    lines.push(Line::from(vec![
+        label("Name:"),
+        Span::styled(security::sanitize_text(&asset.original_name), t.title_style()),
+    ]));
+    lines.push(Line::default());
+
+    lines.push(Line::from(vec![
+        label("Size:"),
+        Span::styled(asset.size_human(), t.text_style()),
+    ]));
+
+    let dims = asset.dimensions_human();
+    if !dims.is_empty() {
+        lines.push(Line::from(vec![
+            label("Dimensions:"),
+            Span::styled(dims, t.text_style()),
+        ]));
+    }
+
+    lines.push(Line::from(vec![
+        label("License:"),
+        Span::styled(
+            security::sanitize_text(&asset.license_or_unknown()),
+            t.success_style(),
+        ),
+    ]));
+
+    if asset.license.is_none() {
+        lines.push(Line::from(Span::styled(
+            "  ⚠ License unknown — verify on Wikimedia Commons before reuse.",
+            t.warn_style(),
+        )));
+    }
+
+    if let Some(author) = &asset.author {
+        lines.push(Line::from(vec![
+            label("Author:"),
+            Span::styled(security::sanitize_text(author), t.text_style()),
+        ]));
+    }
+
+    if let Some(uploader) = &asset.uploader {
+        lines.push(Line::from(vec![
+            label("Uploader:"),
+            Span::styled(security::sanitize_text(uploader), t.text_style()),
+        ]));
+    }
+
+    if let Some(date) = &asset.uploaded_at {
+        lines.push(Line::from(vec![
+            label("Uploaded:"),
+            Span::styled(date.format("%Y-%m-%d").to_string(), t.text_style()),
+        ]));
+    }
+
+    if !asset.categories.is_empty() {
+        lines.push(Line::from(vec![
+            label("Categories:"),
+            Span::styled(
+                security::sanitize_text(&asset.categories.join(", ")),
+                t.dim_style(),
+            ),
+        ]));
+    }
+
+    if let Some(url) = asset.description_url.as_ref().or(asset.url.as_ref()) {
+        lines.push(Line::from(vec![
+            label("Source URL:"),
+            Span::styled(security::sanitize_text(url), t.dim_style()),
+        ]));
+    }
+
+    let detail_block = Block::bordered()
         .title(Span::styled(
-            format!(" Select SVGs to Download — {} ", app.selected.len()),
+            format!(
+                " SVG Details — {} of {} ",
+                app.detail_index + 1,
+                app.assets.len()
+            ),
             t.title_style(),
         ))
         .border_style(t.border_active_style())
+        .padding(Padding::horizontal(2));
+
+    let details_p = Paragraph::new(lines)
+        .block(detail_block)
+        .wrap(Wrap { trim: true });
+    f.render_widget(details_p, chunks[0]);
+
+    let action_block = Block::bordered()
+        .border_style(t.border_style())
         .padding(Padding::horizontal(1));
-
-    let inner = block.inner(area);
-    f.render_widget(block, area);
-
-    if app.assets.is_empty() {
-        let msg = Line::from(Span::styled("No results to select.", t.warn_style()))
-            .alignment(Alignment::Center);
-        f.render_widget(Paragraph::new(msg), inner);
-        return;
-    }
-
-    let name_width = inner.width.saturating_sub(6) as usize;
-    let items: Vec<ListItem> = app
-        .assets
-        .iter()
-        .enumerate()
-        .map(|(i, asset)| {
-            let marker = if app.selected.contains(&i) {
-                "[x]"
-            } else {
-                "[ ]"
-            };
-            let name = security::sanitize_text(&asset.original_name);
-            let name = truncate_chars(&name, name_width);
-            let name_style = if app.selected.contains(&i) {
-                t.success_style().add_modifier(Modifier::BOLD)
-            } else {
-                t.text_style()
-            };
-            ListItem::new(Line::from(vec![
-                Span::styled(marker, t.dim_style()),
-                Span::raw("  "),
-                Span::styled(name, name_style),
-            ]))
-        })
-        .collect();
-
-    let list = List::new(items)
-        .highlight_symbol("› ")
-        .highlight_style(t.selected_style());
-    let mut state = app.list_state.clone();
-    f.render_stateful_widget(list, inner, &mut state);
+    let action_text = Line::from(vec![
+        Span::styled(" [Enter] Download this SVG ", t.selected_style()),
+        Span::raw("    "),
+        Span::styled("[Esc] Back to Results", t.dim_style()),
+        Span::raw("    "),
+        Span::styled("[↑/↓] Previous / Next", t.dim_style()),
+    ]);
+    let action_p = Paragraph::new(action_text)
+        .block(action_block)
+        .alignment(Alignment::Center);
+    f.render_widget(action_p, chunks[1]);
 }
+
+
 
 fn draw_downloading(f: &mut Frame, area: Rect, app: &App) {
     let t = &app.theme;

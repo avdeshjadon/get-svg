@@ -25,16 +25,12 @@ use crate::search;
 pub const MIN_WIDTH: u16 = 80;
 pub const MIN_HEIGHT: u16 = 24;
 
-/// Rows reserved below the result list for the two download actions
-/// (one blank spacer + "Download Manually" + "Download as ZIP").
-pub const ACTION_ROWS: usize = 3;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Screen {
     SearchInput,
     Searching,
     Results,
-    Select,
+    Details,
     Downloading,
 }
 
@@ -110,6 +106,7 @@ pub struct App {
     pub total_hits: Option<u64>,
     pub list_state: ListState,
     pub selected: HashSet<usize>,
+    pub detail_index: usize,
     pub next_offset: u64,
     pub loading_more: bool,
     pub from_cache: bool,
@@ -155,6 +152,7 @@ impl App {
             total_hits: None,
             list_state,
             selected: HashSet::new(),
+            detail_index: 0,
             next_offset: 0,
             loading_more: false,
             from_cache: false,
@@ -235,7 +233,7 @@ impl App {
                 }
             }
             Screen::Results => self.on_key_results(key),
-            Screen::Select => self.on_key_select(key),
+            Screen::Details => self.on_key_details(key),
             Screen::Downloading => self.on_key_downloading(key),
         }
     }
@@ -270,6 +268,10 @@ impl App {
             self.should_quit = true;
             return;
         }
+        if key.code == KeyCode::Char('z') {
+            self.start_zip_all();
+            return;
+        }
         match key.code {
             KeyCode::Esc => {
                 self.screen = Screen::SearchInput;
@@ -285,16 +287,37 @@ impl App {
                     }
                 }
             }
+            KeyCode::Char('d') => {
+                if let Some(i) = self.list_state.selected() {
+                    if i < count {
+                        if let Some(asset) = self.assets.get(i).cloned() {
+                            self.spawn_batch_download(vec![asset], self.settings.download_dir.clone());
+                        }
+                    }
+                }
+            }
             KeyCode::Enter => {
                 let sel = self.list_state.selected().unwrap_or(0);
                 if sel < count {
-                    toggle(&mut self.selected, sel);
+                    self.detail_index = sel;
+                    self.screen = Screen::Details;
                 } else {
-                    let action = sel - count;
-                    match action {
-                        1 => self.start_manual_download(),
-                        2 => self.start_zip_all(),
-                        _ => {}
+                    let action = sel.saturating_sub(count);
+                    if self.selected.is_empty() {
+                        if action >= 1 {
+                            self.start_zip_all();
+                        }
+                    } else {
+                        match action {
+                            1 => {
+                                let chosen = selected_assets(&self.assets, &self.selected);
+                                if !chosen.is_empty() {
+                                    self.spawn_batch_download(chosen, self.settings.download_dir.clone());
+                                }
+                            }
+                            2 => self.start_zip_all(),
+                            _ => {}
+                        }
                     }
                 }
             }
@@ -302,63 +325,61 @@ impl App {
         }
     }
 
-    fn on_key_select(&mut self, key: KeyEvent) {
+    fn on_key_details(&mut self, key: KeyEvent) {
         if self.keymap.matches(&key, self.keymap.quit) {
             self.should_quit = true;
             return;
         }
-        match key.code {
-            KeyCode::Esc => {
-                self.screen = Screen::Results;
-                self.list_state.select(Some(0));
+        if key.code == KeyCode::Esc || key.code == KeyCode::Char('b') {
+            self.screen = Screen::Results;
+            self.list_state.select(Some(self.detail_index));
+            return;
+        }
+        if key.code == KeyCode::Enter || key.code == KeyCode::Char('d') {
+            if let Some(asset) = self.assets.get(self.detail_index).cloned() {
+                self.spawn_batch_download(vec![asset], self.settings.download_dir.clone());
             }
+            return;
+        }
+        if key.code == KeyCode::Char('z') {
+            if let Some(asset) = self.assets.get(self.detail_index).cloned() {
+                let name = asset.original_name.clone();
+                self.spawn_zip(vec![asset], name);
+            }
+            return;
+        }
+        match key.code {
             KeyCode::Up | KeyCode::Char('k') => {
-                if let Some(i) = self.list_state.selected() {
-                    if i > 0 {
-                        self.list_state.select(Some(i - 1));
-                    }
+                if self.detail_index > 0 {
+                    self.detail_index -= 1;
                 }
             }
             KeyCode::Down | KeyCode::Char('j') => {
-                let count = self.assets.len();
-                if let Some(i) = self.list_state.selected() {
-                    if i + 1 < count {
-                        self.list_state.select(Some(i + 1));
-                    }
+                if self.detail_index + 1 < self.assets.len() {
+                    self.detail_index += 1;
                 }
-            }
-            KeyCode::Char(' ') => {
-                if let Some(i) = self.list_state.selected() {
-                    if i < self.assets.len() {
-                        toggle(&mut self.selected, i);
-                    }
-                }
-            }
-            KeyCode::Enter => {
-                let chosen = selected_assets(&self.assets, &self.selected);
-                if chosen.is_empty() {
-                    self.status = "Select at least one SVG (Space), then press Enter.".into();
-                    return;
-                }
-                self.status = format!("Downloading {} selected SVG(s)…", chosen.len());
-                self.spawn_batch_download(chosen, self.settings.download_dir.clone());
             }
             _ => {}
         }
     }
+
+
 
     fn on_key_downloading(&mut self, key: KeyEvent) {
         if self.keymap.matches(&key, self.keymap.quit) {
             self.should_quit = true;
             return;
         }
-        if key.code == KeyCode::Esc {
+        if key.code == KeyCode::Esc || key.code == KeyCode::Char('b') {
             self.screen = if self.assets.is_empty() {
                 Screen::SearchInput
             } else {
                 Screen::Results
             };
-            self.list_state.select(Some(0));
+            self.list_state.select(Some(
+                self.detail_index
+                    .min(self.assets.len().saturating_sub(1)),
+            ));
         }
     }
 
@@ -384,15 +405,21 @@ impl App {
         }
     }
 
-    /// Move the results cursor. Rows above the first asset select the
+    /// Move the results cursor. Rows below the assets select the
     /// download actions; loading more only happens on asset rows.
     fn move_results_selection(&mut self, delta: i32) {
-        let total = self.assets.len() + ACTION_ROWS;
+        let action_rows = if self.selected.is_empty() { 2 } else { 3 };
+        let total = self.assets.len() + action_rows;
         if total == 0 {
             return;
         }
         let current = self.list_state.selected().unwrap_or(0) as i32;
-        let next = (current + delta).clamp(0, total as i32 - 1);
+        let mut next = (current + delta).clamp(0, total as i32 - 1);
+        if next as usize == self.assets.len() && delta > 0 && next + 1 < total as i32 {
+            next += 1;
+        } else if next as usize == self.assets.len() && delta < 0 && next > 0 {
+            next -= 1;
+        }
         self.list_state.select(Some(next as usize));
         if (next as usize) < self.assets.len() {
             self.maybe_load_more();
@@ -402,18 +429,6 @@ impl App {
     // ------------------------------------------------------------------
     // Actions
     // ------------------------------------------------------------------
-
-    /// Open the manual-download selection screen, keeping any check-boxes
-    /// the user already toggled on the results screen.
-    fn start_manual_download(&mut self) {
-        if self.assets.is_empty() {
-            self.status = "No results to download.".into();
-            return;
-        }
-        self.list_state.select(Some(0));
-        self.screen = Screen::Select;
-        self.status = "Press Space to select SVGs, Enter to download.".into();
-    }
 
     /// Bundle every result into one ZIP in the configured download folder.
     fn start_zip_all(&mut self) {
@@ -864,5 +879,41 @@ mod tests {
         assert!(set.contains(&3));
         toggle(&mut set, 3);
         assert!(!set.contains(&3));
+    }
+
+    #[test]
+    fn details_screen_navigation() {
+        let settings = Settings::default();
+        let mut app = App::new(settings).expect("create app");
+        fn asset(name: &str) -> Asset {
+            Asset {
+                title: format!("File:{name}"),
+                page_id: 1,
+                original_name: name.to_string(),
+                file_name: name.to_string(),
+                ..Asset::default()
+            }
+        }
+        app.assets = vec![asset("logo1.svg"), asset("logo2.svg")];
+        app.screen = Screen::Results;
+        app.list_state.select(Some(1));
+
+        // Press Enter on item 1 -> opens Details
+        app.on_key(KeyEvent::new(KeyCode::Enter, crossterm::event::KeyModifiers::NONE));
+        assert_eq!(app.screen, Screen::Details);
+        assert_eq!(app.detail_index, 1);
+
+        // Press Up -> previous detail (index 0)
+        app.on_key(KeyEvent::new(KeyCode::Up, crossterm::event::KeyModifiers::NONE));
+        assert_eq!(app.detail_index, 0);
+
+        // Press Down -> next detail (index 1)
+        app.on_key(KeyEvent::new(KeyCode::Down, crossterm::event::KeyModifiers::NONE));
+        assert_eq!(app.detail_index, 1);
+
+        // Press Esc -> back to Results
+        app.on_key(KeyEvent::new(KeyCode::Esc, crossterm::event::KeyModifiers::NONE));
+        assert_eq!(app.screen, Screen::Results);
+        assert_eq!(app.list_state.selected(), Some(1));
     }
 }
