@@ -2,6 +2,7 @@
 
 mod app;
 mod keymap;
+pub mod preview;
 mod render;
 mod theme;
 

@@ -574,6 +574,24 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         ]));
     }
 
+    let (meta_area, preview_area) = if chunks[0].width >= 80 {
+        let cols = Layout::horizontal([
+            Constraint::Min(44),
+            Constraint::Length(chunks[0].width.min(44).max(34)),
+        ])
+        .split(chunks[0]);
+        (cols[0], Some(cols[1]))
+    } else if chunks[0].height >= 24 {
+        let rows = Layout::vertical([
+            Constraint::Length(10),
+            Constraint::Min(0),
+        ])
+        .split(chunks[0]);
+        (rows[1], Some(rows[0]))
+    } else {
+        (chunks[0], None)
+    };
+
     let detail_block = Block::bordered()
         .title(Span::styled(
             format!(
@@ -589,7 +607,54 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
     let details_p = Paragraph::new(lines)
         .block(detail_block)
         .wrap(Wrap { trim: true });
-    f.render_widget(details_p, chunks[0]);
+    f.render_widget(details_p, meta_area);
+
+    if let Some(p_area) = preview_area {
+        let p_block = Block::bordered()
+            .title(Span::styled(" Visual Preview ", t.title_style()))
+            .border_style(t.border_active_style())
+            .padding(Padding::horizontal(1));
+
+        let preview_url = asset.thumb_url.as_deref().or(asset.url.as_deref());
+        let p_content = match preview_url {
+            Some(url) => {
+                if let Some(lines) = app.preview_cache.get(url) {
+                    Paragraph::new(lines.clone()).block(p_block)
+                } else if app.preview_loading.contains(url) {
+                    let spinner = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+                    let s = spinner[(app.frame as usize / 2) % spinner.len()];
+                    Paragraph::new(vec![
+                        Line::default(),
+                        Line::default(),
+                        Line::default(),
+                        Line::from(vec![
+                            Span::styled(format!("  {s} "), t.bold_accent()),
+                            Span::styled("Loading logo preview…", t.dim_style()),
+                        ])
+                        .alignment(Alignment::Center),
+                    ])
+                    .block(p_block)
+                } else {
+                    Paragraph::new(vec![
+                        Line::default(),
+                        Line::default(),
+                        Line::from(Span::styled("Preview unavailable", t.dim_style()))
+                            .alignment(Alignment::Center),
+                    ])
+                    .block(p_block)
+                }
+            }
+            None => Paragraph::new(vec![
+                Line::default(),
+                Line::default(),
+                Line::from(Span::styled("No image URL", t.dim_style()))
+                    .alignment(Alignment::Center),
+            ])
+            .block(p_block),
+        };
+
+        f.render_widget(p_content, p_area);
+    }
 
     let action_block = Block::bordered()
         .title(Span::styled(" Download ", t.title_style()))
@@ -614,7 +679,7 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
             Span::raw("  •  "),
             Span::styled("[N / Esc] Back to results", t.dim_style()),
             Span::raw("  •  "),
-            Span::styled("[↑/↓] Prev/Next file", t.dim_style()),
+            Span::styled("[←/→ / ↑/↓] Browse files", t.dim_style()),
             Span::raw("  •  "),
             Span::styled("[q] Quit", t.dim_style()),
         ])

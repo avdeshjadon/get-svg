@@ -58,6 +58,13 @@ pub enum AppEvent {
     ZipDone {
         result: Result<(PathBuf, usize, u64)>,
     },
+    PreviewReady {
+        url: String,
+        lines: Vec<ratatui::text::Line<'static>>,
+    },
+    PreviewFailed {
+        url: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -121,6 +128,9 @@ pub struct App {
     pub error: Option<ErrorState>,
     pub status: String,
 
+    pub preview_cache: std::collections::HashMap<String, Vec<ratatui::text::Line<'static>>>,
+    pub preview_loading: std::collections::HashSet<String>,
+
     // pending search bookkeeping
     pending_search_query: String,
     pending_refresh: bool,
@@ -168,6 +178,8 @@ impl App {
                 crate::VERSION,
                 crate::TAGLINE
             ),
+            preview_cache: std::collections::HashMap::new(),
+            preview_loading: std::collections::HashSet::new(),
             pending_search_query: String::new(),
             pending_refresh: false,
             settings,
@@ -324,6 +336,7 @@ impl App {
                 if sel < count {
                     self.detail_index = sel;
                     self.screen = Screen::Details;
+                    self.trigger_preview_load();
                 } else {
                     let action = sel.saturating_sub(count);
                     if self.selected.is_empty() {
@@ -377,11 +390,13 @@ impl App {
             KeyCode::Up | KeyCode::Left | KeyCode::Char('k' | 'h') => {
                 if self.detail_index > 0 {
                     self.detail_index -= 1;
+                    self.trigger_preview_load();
                 }
             }
             KeyCode::Down | KeyCode::Right | KeyCode::Char('j' | 'l') => {
                 if self.detail_index + 1 < self.assets.len() {
                     self.detail_index += 1;
+                    self.trigger_preview_load();
                 }
             }
             _ => {}
@@ -448,6 +463,7 @@ impl App {
         self.list_state.select(Some(next as usize));
         if (next as usize) < self.assets.len() {
             self.maybe_load_more();
+            self.prefetch_preview_for(next as usize);
         }
     }
 
@@ -657,6 +673,53 @@ impl App {
         });
     }
 
+    pub fn prefetch_preview_for(&mut self, index: usize) {
+        let Some(asset) = self.assets.get(index) else {
+            return;
+        };
+        let Some(thumb_url) = asset.thumb_url.as_ref().or(asset.url.as_ref()) else {
+            return;
+        };
+        let url = thumb_url.clone();
+        if self.preview_cache.contains_key(&url) || self.preview_loading.contains(&url) {
+            return;
+        }
+
+        self.preview_loading.insert(url.clone());
+        let tx = self.tx.clone();
+        let client = self.provider.client();
+        let cancel = self.cancel.child_token();
+
+        tokio::spawn(async move {
+            let res = tokio::select! {
+                biased;
+                _ = cancel.cancelled() => None,
+                resp = client
+                    .get(&url)
+                    .header(reqwest::header::ACCEPT, "image/png,image/*;q=0.8")
+                    .header(reqwest::header::REFERER, "https://commons.wikimedia.org/")
+                    .send() => {
+                    match resp {
+                        Ok(r) if r.status().is_success() => r.bytes().await.ok(),
+                        _ => None,
+                    }
+                }
+            };
+
+            if let Some(bytes) = res {
+                if let Some(lines) = crate::ui::preview::render_halfblocks(&bytes, 36, 13) {
+                    let _ = tx.send(AppEvent::PreviewReady { url, lines });
+                    return;
+                }
+            }
+            let _ = tx.send(AppEvent::PreviewFailed { url });
+        });
+    }
+
+    pub fn trigger_preview_load(&mut self) {
+        self.prefetch_preview_for(self.detail_index);
+    }
+
     // ------------------------------------------------------------------
     // App events
     // ------------------------------------------------------------------
@@ -679,6 +742,9 @@ impl App {
                             self.total_hits = page.total_hits;
                             self.next_offset = page.offset + page.per_page;
                             self.screen = Screen::Results;
+                            if !self.assets.is_empty() {
+                                self.prefetch_preview_for(0);
+                            }
                             self.status = if from_cache {
                                 format!("Showing cached results for \"{query}\"")
                             } else {
@@ -795,6 +861,13 @@ impl App {
                     zip.running = false;
                     zip.result = Some(result);
                 }
+            }
+            AppEvent::PreviewReady { url, lines } => {
+                self.preview_loading.remove(&url);
+                self.preview_cache.insert(url, lines);
+            }
+            AppEvent::PreviewFailed { url } => {
+                self.preview_loading.remove(&url);
             }
         }
     }

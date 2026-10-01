@@ -301,6 +301,7 @@ impl WikimediaClient {
                     "iiprop",
                     "url|size|mime|extmetadata|timestamp|user|mediatype".to_string(),
                 ),
+                ("iiurlwidth", "160".to_string()),
                 ("titles", joined),
             ];
             let json = self.get_json(&params).await?;
