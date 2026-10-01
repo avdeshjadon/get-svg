@@ -59,6 +59,7 @@ flate2 = "1"
 tar = "0.4"
 tempfile = "3"
 image = { version = "0.25", default-features = false, features = ["png"] }
+resvg = "0.45"
 
 # --- misc ------------------------------------------------------------------
 chrono = { version = "0.4", features = ["serde"] }

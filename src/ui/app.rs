@@ -60,6 +60,7 @@ pub enum AppEvent {
     },
     PreviewReady {
         url: String,
+        fallback: Option<String>,
         lines: Vec<ratatui::text::Line<'static>>,
     },
     PreviewFailed {
@@ -677,38 +678,78 @@ impl App {
         let Some(asset) = self.assets.get(index) else {
             return;
         };
-        let Some(thumb_url) = asset.thumb_url.as_ref().or(asset.url.as_ref()) else {
+        let thumb_url = asset.thumb_url.clone();
+        let direct_url = asset.url.clone();
+        let Some(url) = thumb_url.as_ref().or(direct_url.as_ref()).cloned() else {
             return;
         };
-        let url = thumb_url.clone();
         if self.preview_cache.contains_key(&url) || self.preview_loading.contains(&url) {
             return;
         }
 
         self.preview_loading.insert(url.clone());
+        if let Some(fb) = &direct_url {
+            self.preview_loading.insert(fb.clone());
+        }
+
         let tx = self.tx.clone();
         let client = self.provider.client();
+        let user_agent = self.settings.user_agent();
         let cancel = self.cancel.child_token();
+        let fallback = direct_url.clone();
 
         tokio::spawn(async move {
-            let res = tokio::select! {
-                biased;
-                _ = cancel.cancelled() => None,
-                resp = client
-                    .get(&url)
-                    .header(reqwest::header::ACCEPT, "image/png,image/*;q=0.8")
-                    .header(reqwest::header::REFERER, "https://commons.wikimedia.org/")
-                    .send() => {
-                    match resp {
-                        Ok(r) if r.status().is_success() => r.bytes().await.ok(),
-                        _ => None,
-                    }
+            let fetch = |target: String| {
+                let client = client.clone();
+                let user_agent = user_agent.clone();
+                async move {
+                    client
+                        .get(&target)
+                        .header(reqwest::header::USER_AGENT, user_agent)
+                        .header(reqwest::header::REFERER, "https://commons.wikimedia.org/")
+                        .header(
+                            reqwest::header::ACCEPT,
+                            "image/svg+xml,image/png,image/*;q=0.8",
+                        )
+                        .send()
+                        .await
                 }
             };
 
-            if let Some(bytes) = res {
+            let mut fetched_bytes: Option<Vec<u8>> = None;
+
+            let res = tokio::select! {
+                biased;
+                _ = cancel.cancelled() => None,
+                resp = fetch(url.clone()) => match resp {
+                    Ok(r) if r.status().is_success() => r.bytes().await.ok().map(|b| b.to_vec()),
+                    _ => None,
+                }
+            };
+
+            if let Some(b) = res {
+                fetched_bytes = Some(b);
+            } else if let Some(fb_url) = fallback.as_ref().filter(|u| *u != &url) {
+                let res2 = tokio::select! {
+                    biased;
+                    _ = cancel.cancelled() => None,
+                    resp = fetch(fb_url.clone()) => match resp {
+                        Ok(r) if r.status().is_success() => r.bytes().await.ok().map(|b| b.to_vec()),
+                        _ => None,
+                    }
+                };
+                if let Some(b) = res2 {
+                    fetched_bytes = Some(b);
+                }
+            }
+
+            if let Some(bytes) = fetched_bytes {
                 if let Some(lines) = crate::ui::preview::render_halfblocks(&bytes, 36, 13) {
-                    let _ = tx.send(AppEvent::PreviewReady { url, lines });
+                    let _ = tx.send(AppEvent::PreviewReady {
+                        url: url.clone(),
+                        fallback,
+                        lines,
+                    });
                     return;
                 }
             }
@@ -862,8 +903,12 @@ impl App {
                     zip.result = Some(result);
                 }
             }
-            AppEvent::PreviewReady { url, lines } => {
+            AppEvent::PreviewReady { url, fallback, lines } => {
                 self.preview_loading.remove(&url);
+                if let Some(fb) = &fallback {
+                    self.preview_loading.remove(fb);
+                    self.preview_cache.insert(fb.clone(), lines.clone());
+                }
                 self.preview_cache.insert(url, lines);
             }
             AppEvent::PreviewFailed { url } => {

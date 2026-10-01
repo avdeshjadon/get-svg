@@ -615,42 +615,52 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
             .border_style(t.border_active_style())
             .padding(Padding::horizontal(1));
 
-        let preview_url = asset.thumb_url.as_deref().or(asset.url.as_deref());
-        let p_content = match preview_url {
-            Some(url) => {
-                if let Some(lines) = app.preview_cache.get(url) {
-                    Paragraph::new(lines.clone()).block(p_block)
-                } else if app.preview_loading.contains(url) {
-                    let spinner = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-                    let s = spinner[(app.frame as usize / 2) % spinner.len()];
-                    Paragraph::new(vec![
-                        Line::default(),
-                        Line::default(),
-                        Line::default(),
-                        Line::from(vec![
-                            Span::styled(format!("  {s} "), t.bold_accent()),
-                            Span::styled("Loading logo preview…", t.dim_style()),
-                        ])
-                        .alignment(Alignment::Center),
-                    ])
-                    .block(p_block)
-                } else {
-                    Paragraph::new(vec![
-                        Line::default(),
-                        Line::default(),
-                        Line::from(Span::styled("Preview unavailable", t.dim_style()))
-                            .alignment(Alignment::Center),
-                    ])
-                    .block(p_block)
-                }
-            }
-            None => Paragraph::new(vec![
+        let lines_opt = asset
+            .thumb_url
+            .as_deref()
+            .and_then(|u| app.preview_cache.get(u))
+            .or_else(|| {
+                asset
+                    .url
+                    .as_deref()
+                    .and_then(|u| app.preview_cache.get(u))
+            });
+
+        let is_loading = asset
+            .thumb_url
+            .as_deref()
+            .map(|u| app.preview_loading.contains(u))
+            .unwrap_or(false)
+            || asset
+                .url
+                .as_deref()
+                .map(|u| app.preview_loading.contains(u))
+                .unwrap_or(false);
+
+        let p_content = if let Some(lines) = lines_opt {
+            Paragraph::new(lines.clone()).block(p_block)
+        } else if is_loading {
+            let spinner = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+            let s = spinner[(app.frame as usize / 2) % spinner.len()];
+            Paragraph::new(vec![
                 Line::default(),
                 Line::default(),
-                Line::from(Span::styled("No image URL", t.dim_style()))
+                Line::default(),
+                Line::from(vec![
+                    Span::styled(format!("  {s} "), t.bold_accent()),
+                    Span::styled("Loading logo preview…", t.dim_style()),
+                ])
+                .alignment(Alignment::Center),
+            ])
+            .block(p_block)
+        } else {
+            Paragraph::new(vec![
+                Line::default(),
+                Line::default(),
+                Line::from(Span::styled("Preview unavailable", t.dim_style()))
                     .alignment(Alignment::Center),
             ])
-            .block(p_block),
+            .block(p_block)
         };
 
         f.render_widget(p_content, p_area);
