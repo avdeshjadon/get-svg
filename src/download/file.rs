@@ -95,73 +95,162 @@ pub async fn download_one(
     cancel: &CancellationToken,
     mut progress: Option<ProgressFn>,
 ) -> Result<DownloadOutcome> {
-    if !security::validate_https_url(url) {
+    #[cfg(test)]
+    let is_valid_url = security::validate_https_url(url)
+        || url.starts_with("http://127.0.0.1")
+        || url.starts_with("http://localhost");
+    #[cfg(not(test))]
+    let is_valid_url = security::validate_https_url(url);
+
+    if !is_valid_url {
         return Err(Error::InvalidUrl(url.to_string()));
     }
     if path.exists() {
         return Ok(DownloadOutcome::Skipped);
     }
 
-    let response = tokio::select! {
-        biased;
-        _ = cancel.cancelled() => return Err(Error::Cancelled),
-        res = client.get(url).send() => res?,
-    };
+    const MAX_ATTEMPTS: u32 = 5;
+    let mut last_error: Option<Error> = None;
 
-    if !response.status().is_success() {
-        return Err(Error::Http {
-            status: response.status().as_u16(),
-            detail: "download request failed".to_string(),
-        });
-    }
+    for attempt in 0..MAX_ATTEMPTS {
+        if cancel.is_cancelled() {
+            return Err(Error::Cancelled);
+        }
 
-    let content_type = response
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    // Wikimedia serves SVGs as image/svg+xml or octet-stream; an HTML body
-    // here means we landed on an error page — do not save it as an SVG.
-    if content_type.contains("text/html") {
-        return Err(Error::Download(format!(
-            "unexpected content type from server: {content_type}"
-        )));
-    }
-
-    let total = response.content_length().unwrap_or(0);
-    if total > MAX_FILE_BYTES {
-        return Err(Error::Download(format!(
-            "file is larger than the {} byte limit",
-            MAX_FILE_BYTES
-        )));
-    }
-
-    let parent = path.parent().unwrap_or_else(|| Path::new("."));
-    std::fs::create_dir_all(parent)?;
-
-    let tmp = temp_path_for(path);
-    let write = write_stream(response, &tmp, total, cancel, &mut progress).await;
-
-    match write {
-        Ok(bytes) => {
-            // Atomic publish: only fully-written files get their final name.
-            match std::fs::rename(&tmp, path) {
-                Ok(()) => Ok(DownloadOutcome::Written {
-                    path: path.to_path_buf(),
-                    bytes,
-                }),
-                Err(e) => {
-                    let _ = std::fs::remove_file(&tmp);
-                    Err(Error::Io(e))
+        // Apply backoff if this is a retry attempt
+        if attempt > 0 {
+            let backoff_duration = match &last_error {
+                Some(Error::Http { status: 429, detail }) => {
+                    crate::api::rate_limit::parse_retry_after(detail)
+                        .unwrap_or_else(|| crate::api::rate_limit::backoff(attempt))
+                        .min(std::time::Duration::from_secs(10))
                 }
+                _ => crate::api::rate_limit::backoff(attempt).min(std::time::Duration::from_secs(8)),
+            };
+
+            tracing::debug!(
+                "Retrying download of {} in {:?} (attempt {}/{MAX_ATTEMPTS})",
+                url,
+                backoff_duration,
+                attempt + 1
+            );
+
+            tokio::select! {
+                biased;
+                _ = cancel.cancelled() => return Err(Error::Cancelled),
+                _ = tokio::time::sleep(backoff_duration) => {}
             }
         }
-        Err(err) => {
-            let _ = std::fs::remove_file(&tmp);
-            Err(err)
+
+        let request = client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "image/svg+xml,image/*,*/*;q=0.8")
+            .header(reqwest::header::REFERER, "https://commons.wikimedia.org/")
+            .header("Sec-Fetch-Dest", "image")
+            .header("Sec-Fetch-Mode", "no-cors")
+            .header("Sec-Fetch-Site", "cross-site")
+            .header(reqwest::header::ACCEPT_LANGUAGE, "en-US,en;q=0.9");
+
+        let response = tokio::select! {
+            biased;
+            _ = cancel.cancelled() => return Err(Error::Cancelled),
+            res = request.send() => match res {
+                Ok(r) => r,
+                Err(e) => {
+                    last_error = Some(Error::from(e));
+                    continue;
+                }
+            },
+        };
+
+        let status = response.status();
+        if status.as_u16() == 429 {
+            let retry_after = response
+                .headers()
+                .get(reqwest::header::RETRY_AFTER)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("")
+                .to_string();
+            last_error = Some(Error::Http {
+                status: 429,
+                detail: retry_after,
+            });
+            continue;
+        }
+
+        if status.is_server_error() {
+            last_error = Some(Error::Http {
+                status: status.as_u16(),
+                detail: format!("server error: {status}"),
+            });
+            continue;
+        }
+
+        if !status.is_success() {
+            // Client errors (404, 400, etc.) are non-retryable
+            return Err(Error::Http {
+                status: status.as_u16(),
+                detail: "download request failed".to_string(),
+            });
+        }
+
+        let content_type = response
+            .headers()
+            .get(reqwest::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+
+        // Wikimedia serves SVGs as image/svg+xml or octet-stream; an HTML body
+        // here means we landed on a transient CDN error/throttling notice — retry.
+        if content_type.contains("text/html") {
+            last_error = Some(Error::Download(format!(
+                "unexpected HTML content type from server: {content_type}"
+            )));
+            continue;
+        }
+
+        let total = response.content_length().unwrap_or(0);
+        if total > MAX_FILE_BYTES {
+            return Err(Error::Download(format!(
+                "file is larger than the {MAX_FILE_BYTES} byte limit"
+            )));
+        }
+
+        let parent = path.parent().unwrap_or_else(|| Path::new("."));
+        std::fs::create_dir_all(parent)?;
+
+        let tmp = temp_path_for(path);
+        let write = write_stream(response, &tmp, total, cancel, &mut progress).await;
+
+        match write {
+            Ok(bytes) => {
+                // Atomic publish: only fully-written files get their final name.
+                match std::fs::rename(&tmp, path) {
+                    Ok(()) => return Ok(DownloadOutcome::Written {
+                        path: path.to_path_buf(),
+                        bytes,
+                    }),
+                    Err(e) => {
+                        let _ = std::fs::remove_file(&tmp);
+                        return Err(Error::Io(e));
+                    }
+                }
+            }
+            Err(err) => {
+                let _ = std::fs::remove_file(&tmp);
+                if matches!(err, Error::Cancelled) {
+                    return Err(Error::Cancelled);
+                }
+                last_error = Some(err);
+                continue;
+            }
         }
     }
+
+    Err(last_error.unwrap_or_else(|| {
+        Error::Download("download failed after maximum retry attempts".into())
+    }))
 }
 
 fn temp_path_for(path: &Path) -> PathBuf {
@@ -268,4 +357,51 @@ mod tests {
         assert!(!security::validate_https_url("http://x.test/a.svg"));
         assert!(!security::validate_https_url("ftp://x.test/a.svg"));
     }
+
+    #[tokio::test]
+    async fn download_one_retries_on_429_and_succeeds() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        use tokio::net::TcpListener;
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+
+        tokio::spawn(async move {
+            // First request: 429 Too Many Requests with Retry-After: 0
+            if let Ok((mut stream, _)) = listener.accept().await {
+                let mut buf = [0u8; 1024];
+                let _ = stream.read(&mut buf).await;
+                let response = "HTTP/1.1 429 Too Many Requests\r\nRetry-After: 0\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+                let _ = stream.write_all(response.as_bytes()).await;
+                let _ = stream.flush().await;
+            }
+
+            // Second request: 200 OK with valid SVG
+            if let Ok((mut stream, _)) = listener.accept().await {
+                let mut buf = [0u8; 1024];
+                let _ = stream.read(&mut buf).await;
+                let body = "<svg><circle r='10'/></svg>";
+                let response = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: image/svg+xml\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                    body.len(),
+                    body
+                );
+                let _ = stream.write_all(response.as_bytes()).await;
+                let _ = stream.flush().await;
+            }
+        });
+
+        let client = reqwest::Client::new();
+        let dir = tempfile::tempdir().unwrap();
+        let out_path = dir.path().join("icon.svg");
+        let cancel = CancellationToken::new();
+        let server_url = format!("http://127.0.0.1:{port}/icon.svg");
+
+        let res = download_one(&client, &server_url, &out_path, &cancel, None).await;
+        assert!(res.is_ok(), "download should succeed on retry: {:?}", res);
+        assert!(out_path.exists(), "target file should be written");
+        let content = std::fs::read_to_string(&out_path).unwrap();
+        assert_eq!(content, "<svg><circle r='10'/></svg>");
+    }
 }
+

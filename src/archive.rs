@@ -8,6 +8,7 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use futures::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use tokio_util::sync::CancellationToken;
@@ -75,47 +76,74 @@ pub async fn create_zip(
     let scratch = tempfile::tempdir()
         .map_err(|e| Error::Download(format!("could not create temp dir: {e}")))?;
 
-    // Phase 1: download every file into the scratch directory.
+    // Phase 1: download every file into the scratch directory concurrently.
     let svg_dir = scratch.path().join("svg");
     std::fs::create_dir_all(&svg_dir)?;
     let mut names = crate::download::NameAllocator::new();
-    let mut downloaded: Vec<(String, PathBuf)> = Vec::with_capacity(assets.len());
     let total = assets.len();
 
-    for (i, asset) in assets.iter().enumerate() {
+    let mut items = Vec::with_capacity(total);
+    for asset in assets {
+        if let Some(url) = asset.url.as_deref() {
+            if let Some(path) = names.allocate(&svg_dir, &asset.file_name, false) {
+                items.push((
+                    asset.original_name.clone(),
+                    asset.file_name.clone(),
+                    url.to_string(),
+                    path,
+                ));
+            }
+        }
+    }
+
+    let workers = concurrency.clamp(2, 6);
+    let tasks = items.into_iter().map(|(orig_name, file_name, url, path)| {
+        let cancel = cancel.clone();
+        async move {
+            if cancel.is_cancelled() {
+                return (orig_name, Err(Error::Cancelled));
+            }
+            let res = crate::download::file::download_one(client, &url, &path, &cancel, None).await;
+            match res {
+                Ok(crate::download::DownloadOutcome::Written { path, .. }) => {
+                    (orig_name, Ok((security::sanitize_filename(&file_name), path)))
+                }
+                Ok(crate::download::DownloadOutcome::Skipped) => {
+                    if path.exists() {
+                        (orig_name, Ok((security::sanitize_filename(&file_name), path)))
+                    } else {
+                        (orig_name, Err(Error::Download("file was skipped".into())))
+                    }
+                }
+                Err(e) => (orig_name, Err(e)),
+            }
+        }
+    });
+
+    let mut stream = futures::stream::iter(tasks).buffer_unordered(workers);
+    let mut downloaded: Vec<(String, PathBuf)> = Vec::with_capacity(total);
+    let mut done = 0;
+
+    while let Some((orig_name, result)) = stream.next().await {
         if cancel.is_cancelled() {
             return Err(Error::Cancelled);
         }
+        done += 1;
         if let Some(cb) = on_event.as_deref_mut() {
             cb(ZipEvent {
                 phase: ZipPhase::Downloading,
-                done: i,
+                done,
                 total,
-                current_name: Some(asset.original_name.clone()),
+                current_name: Some(orig_name.clone()),
             });
         }
-        let Some(url) = asset.url.as_deref() else {
-            continue;
-        };
-        let Some(path) = names.allocate(&svg_dir, &asset.file_name, false) else {
-            continue;
-        };
-        match crate::download::file::download_one(client, url, &path, cancel, None).await {
-            Ok(crate::download::DownloadOutcome::Written { path, .. }) => {
-                downloaded.push((security::sanitize_filename(&asset.file_name), path));
-            }
-            Ok(crate::download::DownloadOutcome::Skipped) => {
-                if path.exists() {
-                    downloaded.push((security::sanitize_filename(&asset.file_name), path));
-                }
-            }
+        match result {
+            Ok(item) => downloaded.push(item),
             Err(Error::Cancelled) => return Err(Error::Cancelled),
             Err(e) => {
-                // A single bad file must not sink the archive; record it.
-                tracing::warn!("skipping {} during zip: {e}", asset.original_name);
+                tracing::warn!("skipping {orig_name} during zip: {e}");
             }
         }
-        let _ = concurrency;
     }
 
     if downloaded.is_empty() {
