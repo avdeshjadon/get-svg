@@ -364,16 +364,51 @@ async fn cmd_download(
     let asset = match provider.get_asset(&title).await? {
         Some(a) => a,
         None => {
-            // Fall back to a title search so `download github-logo` works.
-            let found = search::fetch_page(&provider, &cache, &title, 0, 5).await?;
-            match found.page.assets.into_iter().find(|a| {
-                a.original_name.eq_ignore_ascii_case(&title) || a.title.eq_ignore_ascii_case(&title)
-            }) {
-                Some(a) => a,
-                None => {
-                    return Err(Error::Other(format!(
-                        "no file named \"{title}\" was found on Wikimedia Commons"
-                    )));
+            let mut candidate = None;
+            if !title.starts_with("File:") && !title.starts_with("file:") {
+                let with_file = format!("File:{title}");
+                if let Ok(Some(a)) = provider.get_asset(&with_file).await {
+                    candidate = Some(a);
+                } else if !title.ends_with(".svg") {
+                    let with_svg = format!("File:{title}.svg");
+                    if let Ok(Some(a)) = provider.get_asset(&with_svg).await {
+                        candidate = Some(a);
+                    }
+                }
+            }
+
+            if let Some(a) = candidate {
+                a
+            } else {
+                // Fall back to a search so `download github` or `download amazon` works.
+                let raw_query = file.trim();
+                let found = search::fetch_page(&provider, &cache, raw_query, 0, 10).await?;
+                let exact = found.page.assets.iter().find(|a| {
+                    a.original_name.eq_ignore_ascii_case(raw_query)
+                        || a.title.eq_ignore_ascii_case(raw_query)
+                        || a.original_name
+                            .trim_end_matches(".svg")
+                            .eq_ignore_ascii_case(raw_query)
+                }).cloned();
+
+                let contains = exact.or_else(|| {
+                    found.page.assets.iter().find(|a| {
+                        a.original_name
+                            .to_lowercase()
+                            .contains(&raw_query.to_lowercase())
+                    }).cloned()
+                });
+
+                match contains.or_else(|| found.page.assets.into_iter().next()) {
+                    Some(a) => {
+                        eprintln!("Found match: {}", a.original_name);
+                        a
+                    }
+                    None => {
+                        return Err(Error::Other(format!(
+                            "no SVG file matching \"{file}\" was found on Wikimedia Commons"
+                        )));
+                    }
                 }
             }
         }
@@ -723,9 +758,9 @@ mod tests {
 
     #[test]
     fn confirm_without_tty_requires_yes() {
-        // When stdin is not a terminal (as in tests), --yes is mandatory.
-        let err = confirm("Continue?", false);
+        // When stdin is not a terminal (as in CI/scripts), --yes is mandatory.
         if !std::io::stdin().is_terminal() {
+            let err = confirm("Continue?", false);
             assert!(err.is_err());
         }
         assert!(confirm("Continue?", true).unwrap());

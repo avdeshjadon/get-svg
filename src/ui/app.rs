@@ -117,6 +117,7 @@ pub struct App {
     pub zip: Option<ZipUi>,
 
     // Overlays / status
+    pub zip_confirm: bool,
     pub error: Option<ErrorState>,
     pub status: String,
 
@@ -159,6 +160,7 @@ impl App {
             searching: false,
             batch: None,
             zip: None,
+            zip_confirm: false,
             error: None,
             status: format!(
                 "{} v{} — {}",
@@ -263,13 +265,33 @@ impl App {
     }
 
     fn on_key_results(&mut self, key: KeyEvent) {
-        let count = self.assets.len();
         if self.keymap.matches(&key, self.keymap.quit) {
             self.should_quit = true;
             return;
         }
-        if key.code == KeyCode::Char('z') {
-            self.start_zip_all();
+
+        // Handle ZIP download confirmation prompt
+        if self.zip_confirm {
+            match key.code {
+                KeyCode::Char('y' | 'Y') | KeyCode::Enter => {
+                    self.zip_confirm = false;
+                    self.start_zip_all();
+                }
+                KeyCode::Char('n' | 'N') | KeyCode::Esc => {
+                    self.zip_confirm = false;
+                }
+                _ => {}
+            }
+            return;
+        }
+
+        let count = self.assets.len();
+        if matches!(key.code, KeyCode::Char('z' | 'Z')) {
+            if !self.assets.is_empty() {
+                self.zip_confirm = true;
+            } else {
+                self.status = "Nothing to archive.".into();
+            }
             return;
         }
         match key.code {
@@ -305,7 +327,7 @@ impl App {
                     let action = sel.saturating_sub(count);
                     if self.selected.is_empty() {
                         if action >= 1 {
-                            self.start_zip_all();
+                            self.zip_confirm = true;
                         }
                     } else {
                         match action {
@@ -315,7 +337,7 @@ impl App {
                                     self.spawn_batch_download(chosen, self.settings.download_dir.clone());
                                 }
                             }
-                            2 => self.start_zip_all(),
+                            2 => self.zip_confirm = true,
                             _ => {}
                         }
                     }
@@ -330,18 +352,20 @@ impl App {
             self.should_quit = true;
             return;
         }
-        if key.code == KeyCode::Esc || key.code == KeyCode::Char('b') {
+        // 'n', 'N', Esc, 'b' -> decline download / go back to Results
+        if matches!(key.code, KeyCode::Esc | KeyCode::Char('b' | 'n' | 'N')) {
             self.screen = Screen::Results;
             self.list_state.select(Some(self.detail_index));
             return;
         }
-        if key.code == KeyCode::Enter || key.code == KeyCode::Char('d') {
+        // 'y', 'Y', Enter, 'd' -> confirm and download this single file
+        if matches!(key.code, KeyCode::Enter | KeyCode::Char('y' | 'Y' | 'd')) {
             if let Some(asset) = self.assets.get(self.detail_index).cloned() {
                 self.spawn_batch_download(vec![asset], self.settings.download_dir.clone());
             }
             return;
         }
-        if key.code == KeyCode::Char('z') {
+        if matches!(key.code, KeyCode::Char('z' | 'Z')) {
             if let Some(asset) = self.assets.get(self.detail_index).cloned() {
                 let name = asset.original_name.clone();
                 self.spawn_zip(vec![asset], name);
@@ -349,12 +373,12 @@ impl App {
             return;
         }
         match key.code {
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up | KeyCode::Left | KeyCode::Char('k' | 'h') => {
                 if self.detail_index > 0 {
                     self.detail_index -= 1;
                 }
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down | KeyCode::Right | KeyCode::Char('j' | 'l') => {
                 if self.detail_index + 1 < self.assets.len() {
                     self.detail_index += 1;
                 }
@@ -915,5 +939,44 @@ mod tests {
         app.on_key(KeyEvent::new(KeyCode::Esc, crossterm::event::KeyModifiers::NONE));
         assert_eq!(app.screen, Screen::Results);
         assert_eq!(app.list_state.selected(), Some(1));
+
+        // Re-enter Details screen and press 'n' -> back to Results
+        app.on_key(KeyEvent::new(KeyCode::Enter, crossterm::event::KeyModifiers::NONE));
+        assert_eq!(app.screen, Screen::Details);
+        app.on_key(KeyEvent::new(KeyCode::Char('n'), crossterm::event::KeyModifiers::NONE));
+        assert_eq!(app.screen, Screen::Results);
+    }
+
+    #[test]
+    fn zip_confirm_prompt_handling() {
+        let settings = Settings::default();
+        let mut app = App::new(settings).expect("create app");
+        fn asset(name: &str) -> Asset {
+            Asset {
+                title: format!("File:{name}"),
+                page_id: 1,
+                original_name: name.to_string(),
+                file_name: name.to_string(),
+                ..Asset::default()
+            }
+        }
+        app.assets = vec![asset("logo1.svg")];
+        app.screen = Screen::Results;
+
+        // Press 'z' -> triggers zip_confirm dialog
+        app.on_key(KeyEvent::new(KeyCode::Char('z'), crossterm::event::KeyModifiers::NONE));
+        assert!(app.zip_confirm);
+
+        // Press 'n' -> cancels zip_confirm dialog without starting download
+        app.on_key(KeyEvent::new(KeyCode::Char('n'), crossterm::event::KeyModifiers::NONE));
+        assert!(!app.zip_confirm);
+        assert!(app.zip.is_none());
+
+        // Press 'z' again then Esc -> also cancels
+        app.on_key(KeyEvent::new(KeyCode::Char('z'), crossterm::event::KeyModifiers::NONE));
+        assert!(app.zip_confirm);
+        app.on_key(KeyEvent::new(KeyCode::Esc, crossterm::event::KeyModifiers::NONE));
+        assert!(!app.zip_confirm);
     }
 }
+

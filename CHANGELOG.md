@@ -24,30 +24,18 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses
 - The `d`/`D` home shortcut now correctly routes through search semantics
   instead of a leftover `DownloadInput` path mapping.
 
-## [Unreleased]
+## [0.2.3] - 2026-10-02
 
 ### Changed
-- **Minimal search-first TUI.** Launching `getsvg` now opens the search box
-  directly — no Home menu, no Help/Quit/My Downloads/Recent/Settings/Extra
-  entries. Search results render with just two actions below the list:
-  **Download Manually** and **Download as ZIP**.
-- **Download Manually** opens a clean check-box screen: `Space` toggles SVGs,
-  `Enter` downloads only the selected ones (individually, into the configured
-  download folder).
-- **Download as ZIP** collects every result into one archive
-  (e.g. `Amazon` → `amazon-svg.zip`) with no per-file selection.
-- Exact-filename behaviour removed from the interactive search: keywords like
-  `Amazon` (no `.svg` needed) return related SVGs, and a trailing `.svg` is
-  stripped from single-token queries (`Amazon.svg` searches like `Amazon`).
-- Detail / single-download / recent-searches / settings / help screens removed
-  to keep the tool focused on search + download.
+- **Minimal search-first TUI with ASCII Logo Banner**: Launching `get-svg` / `getsvg` directly displays the GET SVG block-letter banner with tagline and the search input box immediately below it without any cluttered menus.
+- **Detailed Asset View**: Pressing `Enter` on any search result opens a comprehensive details screen showing license, dimensions, file size, direct SVG download URL, and direct canonical Wikimedia Commons web link.
+- **Confirmation Prompts for Downloads**:
+  - **Complete ZIP Archive**: Added `Download all files as complete ZIP` action with `[Y/N]` confirmation dialog.
+  - **Individual File Download**: In the details view, added `[Y/N]` prompt (`y` / `Enter` to download only that file, `n` / `Esc` to return to results).
 
 ### Added
-- `getsvg dlt` — full uninstall: removes the config directory (settings,
-  cache, recent searches), the default `~/Downloads/get-svg` folder, and the
-  `get-svg`/`getsvg` binaries so a fresh start behaves like a brand new
-  install. Custom download directories are never wiped automatically.
-  `--yes` skips the confirmation prompt.
+- Keybindings in results: `z` triggers ZIP archive confirmation; `y`/`n` to confirm/cancel.
+- Keybindings in details: `y`/`Enter` to download single file; `n`/`Esc` to return to results; `↑`/`↓` to navigate between previous/next files.
 
 ## [0.2.1] - 2026-09-21
 
