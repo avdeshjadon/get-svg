@@ -179,6 +179,7 @@ impl App {
     // ------------------------------------------------------------------
 
     pub fn run(&mut self, terminal: &mut ratatui::DefaultTerminal) -> Result<i32> {
+        terminal.clear()?;
         loop {
             while let Ok(event) = self.rx.try_recv() {
                 self.on_app_event(event);

@@ -38,15 +38,29 @@ pub fn draw(f: &mut Frame, app: &App) {
         return;
     }
 
-    let layout = Layout::vertical([
-        Constraint::Length(1),
-        Constraint::Min(0),
-        Constraint::Length(1),
-    ])
-    .split(area);
+    f.render_widget(Clear, area);
 
-    draw_header(f, layout[0], app);
-    let body = layout[1];
+    let (body, footer_area) = match app.screen {
+        Screen::SearchInput => {
+            let layout = Layout::vertical([
+                Constraint::Min(0),
+                Constraint::Length(1),
+            ])
+            .split(area);
+            (layout[0], layout[1])
+        }
+        _ => {
+            let layout = Layout::vertical([
+                Constraint::Length(1),
+                Constraint::Min(0),
+                Constraint::Length(1),
+            ])
+            .split(area);
+            draw_header(f, layout[0], app);
+            (layout[1], layout[2])
+        }
+    };
+
     match app.screen {
         Screen::SearchInput => draw_search_input(f, body, app),
         Screen::Searching => draw_searching(f, body, app),
@@ -54,7 +68,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         Screen::Details => draw_details(f, body, app),
         Screen::Downloading => draw_downloading(f, body, app),
     }
-    draw_footer(f, layout[2], app);
+    draw_footer(f, footer_area, app);
 
     if let Some(err) = &app.error {
         draw_error(f, area, err, &app.theme);
@@ -229,6 +243,7 @@ fn draw_search_input(f: &mut Frame, area: Rect, app: &App) {
     };
 
     if let Some(chunk) = logo_chunk {
+        f.render_widget(Clear, chunk);
         let logo_block = Block::bordered().border_style(t.border_style());
         let mut logo_text = Text::default();
         logo_text.push_line(Line::default());
