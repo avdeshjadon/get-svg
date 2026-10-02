@@ -393,20 +393,45 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
         } else {
             t.text_style()
         };
-        let pad = pad_to(name_width as usize, &name);
+
         let mut row_spans = vec![
             Span::styled(marker, t.dim_style()),
             Span::raw(" "),
             Span::styled(index, t.dim_style()),
             Span::raw("  "),
-            Span::styled(name, name_style),
-            Span::styled(pad, t.text_style()),
-            Span::styled(format!(" {size} "), t.dim_style()),
-            Span::styled(license, t.dim_style()),
+            Span::styled(name.clone(), name_style),
         ];
+
+        let name_char_count = name.chars().count();
+        let gap = (name_width as usize).saturating_sub(name_char_count);
+
         if is_selected_row {
-            row_spans.push(Span::styled("   [V] Preview SVG ↗", t.bold_accent()));
+            let badge = "[Press V for Preview]";
+            let badge_len = badge.chars().count();
+            if gap > badge_len + 2 {
+                let pad_left = (gap - badge_len) / 2;
+                let pad_right = gap - badge_len - pad_left;
+                row_spans.push(Span::raw(" ".repeat(pad_left)));
+                row_spans.push(Span::styled(badge, t.bold_accent()));
+                row_spans.push(Span::raw(" ".repeat(pad_right)));
+            } else if gap >= 11 {
+                let short_badge = "[V Preview]";
+                let sb_len = short_badge.chars().count();
+                let pad_left = (gap - sb_len) / 2;
+                let pad_right = gap - sb_len - pad_left;
+                row_spans.push(Span::raw(" ".repeat(pad_left)));
+                row_spans.push(Span::styled(short_badge, t.bold_accent()));
+                row_spans.push(Span::raw(" ".repeat(pad_right)));
+            } else {
+                row_spans.push(Span::raw(" ".repeat(gap)));
+            }
+        } else {
+            row_spans.push(Span::raw(" ".repeat(gap)));
         }
+
+        row_spans.push(Span::styled(format!(" {size} "), t.dim_style()));
+        row_spans.push(Span::styled(license, t.dim_style()));
+
         items.push(ListItem::new(Line::from(row_spans)));
     }
 
@@ -821,12 +846,4 @@ fn truncate_chars(s: &str, max: usize) -> String {
         out.push('…');
         out
     }
-}
-
-fn pad_to(width: usize, s: &str) -> String {
-    let count = s.chars().count();
-    if count >= width {
-        return String::new();
-    }
-    " ".repeat(width - count)
 }
