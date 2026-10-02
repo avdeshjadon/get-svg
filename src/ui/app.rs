@@ -319,6 +319,13 @@ impl App {
             }
             KeyCode::Up | KeyCode::Char('k') => self.move_results_selection(-1),
             KeyCode::Down | KeyCode::Char('j') => self.move_results_selection(1),
+            KeyCode::Char('v' | 'V') => {
+                if let Some(i) = self.list_state.selected() {
+                    if i < count {
+                        self.open_vector_viewer(i);
+                    }
+                }
+            }
             KeyCode::Char(' ' | 'x') => {
                 if let Some(i) = self.list_state.selected() {
                     if i < count {
@@ -370,9 +377,9 @@ impl App {
             self.should_quit = true;
             return;
         }
-        // 'v', 'V', 'o', 'O', ' ' -> Open native vector preview (QuickLook on macOS)
+        // 'v', 'V', 'o', 'O', ' ' -> Open vector preview window
         if matches!(key.code, KeyCode::Char('v' | 'V' | 'o' | 'O' | ' ')) {
-            self.open_native_preview();
+            self.open_vector_viewer(self.detail_index);
             return;
         }
         // 'n', 'N', Esc, 'b' -> decline download / go back to Results
@@ -767,8 +774,8 @@ impl App {
         });
     }
 
-    pub fn open_native_preview(&mut self) {
-        let Some(asset) = self.assets.get(self.detail_index).cloned() else {
+    pub fn open_vector_viewer(&mut self, index: usize) {
+        let Some(asset) = self.assets.get(index).cloned() else {
             return;
         };
 
@@ -780,24 +787,22 @@ impl App {
             .or_else(|| thumb_url.as_ref().and_then(|u| self.preview_bytes_cache.get(u)))
             .cloned();
 
-        let filename = if asset.file_name.ends_with(".svg") {
-            asset.file_name.clone()
-        } else {
-            format!("{}.svg", asset.file_name)
-        };
-        let temp_path = std::env::temp_dir().join(format!("getsvg_preview_{}", filename));
+        let title = asset.original_name.clone();
 
         if let Some(bytes) = candidate_bytes {
-            let _ = std::fs::write(&temp_path, &bytes);
-            Self::launch_system_viewer(&temp_path);
-            self.status = format!("Preview opened: {} (press Space or Esc to close)", filename);
+            if let Ok(_path) = crate::ui::viewer::open_vector_window(&title, &bytes) {
+                self.status = format!("Preview opened: {} (press Esc or Q to close)", title);
+            } else {
+                self.status = format!("Failed to open preview window for {}", title);
+            }
             return;
         }
 
         if let Some(url) = direct_url.or(thumb_url) {
             let client = self.provider.client();
             let user_agent = self.settings.user_agent();
-            self.status = format!("Fetching {} for vector preview…", filename);
+            self.status = format!("Fetching {} for vector preview…", title);
+            let tx = self.tx.clone();
             tokio::spawn(async move {
                 if let Ok(resp) = client
                     .get(&url)
@@ -807,45 +812,16 @@ impl App {
                     .await
                 {
                     if let Ok(b) = resp.bytes().await {
-                        let _ = std::fs::write(&temp_path, &b);
-                        Self::launch_system_viewer(&temp_path);
+                        let _ = crate::ui::viewer::open_vector_window(&title, &b);
+                        let _ = tx.send(AppEvent::PreviewReady {
+                            url: url.clone(),
+                            fallback: None,
+                            raw_bytes: Some(b.to_vec()),
+                            lines: Vec::new(),
+                        });
                     }
                 }
             });
-        }
-    }
-
-    fn launch_system_viewer(path: &std::path::Path) {
-        #[cfg(target_os = "macos")]
-        {
-            let res = std::process::Command::new("qlmanage")
-                .args(["-p", path.to_str().unwrap_or_default()])
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn();
-            if res.is_err() {
-                let _ = std::process::Command::new("open")
-                    .arg(path.to_str().unwrap_or_default())
-                    .stdout(std::process::Stdio::null())
-                    .stderr(std::process::Stdio::null())
-                    .spawn();
-            }
-        }
-        #[cfg(target_os = "linux")]
-        {
-            let _ = std::process::Command::new("xdg-open")
-                .arg(path.to_str().unwrap_or_default())
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn();
-        }
-        #[cfg(target_os = "windows")]
-        {
-            let _ = std::process::Command::new("cmd")
-                .args(["/c", "start", "", path.to_str().unwrap_or_default()])
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn();
         }
     }
 

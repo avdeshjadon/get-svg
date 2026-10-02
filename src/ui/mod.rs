@@ -5,6 +5,7 @@ mod keymap;
 pub mod preview;
 mod render;
 mod theme;
+pub mod viewer;
 
 use std::io::IsTerminal;
 

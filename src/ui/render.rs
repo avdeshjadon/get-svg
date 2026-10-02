@@ -154,14 +154,16 @@ fn footer_hint(app: &App) -> Vec<Span<'static>> {
                 s.extend(key_span(t, "n / Esc", "Cancel"));
             } else {
                 s.extend(key_span(t, "↑↓", "Navigate"));
-                s.extend(key_span(t, "Enter", "Details & Download"));
-                s.extend(key_span(t, "z", "Download as ZIP"));
+                s.extend(key_span(t, "v", "Preview SVG (Window)"));
+                s.extend(key_span(t, "Enter", "Details"));
                 s.extend(key_span(t, "Space", "Select"));
+                s.extend(key_span(t, "z", "Download as ZIP"));
                 s.extend(key_span(t, "Esc", "New search"));
                 s.extend(key_span(t, "q", "Quit"));
             }
         }
         Screen::Details => {
+            s.extend(key_span(t, "v / Space", "Open Vector Window"));
             s.extend(key_span(t, "y / Enter", "Download file"));
             s.extend(key_span(t, "n / Esc", "Back to results"));
             s.extend(key_span(t, "↑↓", "Prev/Next file"));
@@ -370,8 +372,10 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(Paragraph::new(header), head_area);
 
     // Asset rows, then a spacer, then the two download actions.
+    let cur_sel = app.list_state.selected();
     let mut items: Vec<ListItem> = Vec::new();
     for (i, asset) in app.assets.iter().enumerate() {
+        let is_selected_row = cur_sel == Some(i);
         let marker = if app.selected.contains(&i) {
             "[x]"
         } else {
@@ -390,7 +394,7 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
             t.text_style()
         };
         let pad = pad_to(name_width as usize, &name);
-        let row = Line::from(vec![
+        let mut row_spans = vec![
             Span::styled(marker, t.dim_style()),
             Span::raw(" "),
             Span::styled(index, t.dim_style()),
@@ -399,8 +403,11 @@ fn draw_results(f: &mut Frame, area: Rect, app: &App) {
             Span::styled(pad, t.text_style()),
             Span::styled(format!(" {size} "), t.dim_style()),
             Span::styled(license, t.dim_style()),
-        ]);
-        items.push(ListItem::new(row));
+        ];
+        if is_selected_row {
+            row_spans.push(Span::styled("   [V] Preview SVG ↗", t.bold_accent()));
+        }
+        items.push(ListItem::new(Line::from(row_spans)));
     }
 
     items.push(ListItem::new(Line::from(Span::styled(
@@ -574,36 +581,11 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         ]));
     }
 
-    let (meta_area, preview_area, hint_area) = if chunks[0].width >= 80 {
-        let p_width = 46u16.min(chunks[0].width / 3).max(36);
-        let cols = Layout::horizontal([
-            Constraint::Min(45),
-            Constraint::Length(p_width),
-        ])
-        .split(chunks[0]);
-
-        let right_rows = Layout::vertical([
-            Constraint::Length(15),
-            Constraint::Min(0),
-        ])
-        .split(cols[1]);
-
-        let h_area = if right_rows[1].height >= 5 {
-            Some(right_rows[1])
-        } else {
-            None
-        };
-        (cols[0], Some(right_rows[0]), h_area)
-    } else if chunks[0].height >= 24 {
-        let rows = Layout::vertical([
-            Constraint::Length(12),
-            Constraint::Min(0),
-        ])
-        .split(chunks[0]);
-        (rows[1], Some(rows[0]), None)
-    } else {
-        (chunks[0], None, None)
-    };
+    lines.push(Line::default());
+    lines.push(Line::from(vec![
+        label("Interactive View:"),
+        Span::styled("Press [V] or [Space] to open in dedicated Vector Window (Retina / Zoomable)", t.bold_accent()),
+    ]));
 
     let detail_block = Block::bordered()
         .title(Span::styled(
@@ -620,91 +602,7 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
     let details_p = Paragraph::new(lines)
         .block(detail_block)
         .wrap(Wrap { trim: true });
-    f.render_widget(details_p, meta_area);
-
-    if let Some(p_area) = preview_area {
-        let p_block = Block::bordered()
-            .title(Span::styled(" Visual Preview ", t.title_style()))
-            .border_style(t.border_active_style())
-            .padding(Padding::horizontal(1));
-
-        let lines_opt = asset
-            .url
-            .as_deref()
-            .and_then(|u| app.preview_cache.get(u))
-            .or_else(|| {
-                asset
-                    .thumb_url
-                    .as_deref()
-                    .and_then(|u| app.preview_cache.get(u))
-            });
-
-        let is_loading = asset
-            .url
-            .as_deref()
-            .map(|u| app.preview_loading.contains(u))
-            .unwrap_or(false)
-            || asset
-                .thumb_url
-                .as_deref()
-                .map(|u| app.preview_loading.contains(u))
-                .unwrap_or(false);
-
-        let p_content = if let Some(lines) = lines_opt {
-            Paragraph::new(lines.clone()).block(p_block)
-        } else if is_loading {
-            let spinner = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-            let s = spinner[(app.frame as usize / 2) % spinner.len()];
-            Paragraph::new(vec![
-                Line::default(),
-                Line::default(),
-                Line::default(),
-                Line::from(vec![
-                    Span::styled(format!("  {s} "), t.bold_accent()),
-                    Span::styled("Loading logo preview…", t.dim_style()),
-                ])
-                .alignment(Alignment::Center),
-            ])
-            .block(p_block)
-        } else {
-            Paragraph::new(vec![
-                Line::default(),
-                Line::default(),
-                Line::from(Span::styled("Preview unavailable", t.dim_style()))
-                    .alignment(Alignment::Center),
-            ])
-            .block(p_block)
-        };
-
-        f.render_widget(p_content, p_area);
-    }
-
-    if let Some(h_area) = hint_area {
-        let tip_block = Block::bordered()
-            .title(Span::styled(" Actions & Preview ", t.title_style()))
-            .border_style(t.border_style())
-            .padding(Padding::horizontal(1));
-        let tip_p = Paragraph::new(vec![
-            Line::default(),
-            Line::from(vec![
-                Span::styled(" [V / Space] ", t.bold_accent()),
-                Span::styled("Retina Vector Preview", t.text_style()),
-            ]),
-            Line::from(Span::styled("  macOS QuickLook floating window", t.dim_style())),
-            Line::default(),
-            Line::from(vec![
-                Span::styled(" [Y / Enter] ", t.selected_style()),
-                Span::styled("Download to disk", t.text_style()),
-            ]),
-            Line::default(),
-            Line::from(vec![
-                Span::styled(" [N / Esc]   ", t.dim_style()),
-                Span::styled("Back to search results", t.dim_style()),
-            ]),
-        ])
-        .block(tip_block);
-        f.render_widget(tip_p, h_area);
-    }
+    f.render_widget(details_p, chunks[0]);
 
     let action_block = Block::bordered()
         .title(Span::styled(" Download ", t.title_style()))
@@ -720,7 +618,7 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         Line::from(vec![
             Span::styled(" [Y] Yes (Download this file) ", t.selected_style()),
             Span::raw("    "),
-            Span::styled(" [V] Instant Vector Preview ", t.bold_accent()),
+            Span::styled(" [V] Open Vector Preview Window ↗ ", t.bold_accent()),
             Span::raw("    "),
             Span::styled(" [N] No (Back to results) ", t.border_style()),
         ])
@@ -729,7 +627,7 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         Line::from(vec![
             Span::styled("[Y / Enter] Download file", t.bold_accent()),
             Span::raw("  •  "),
-            Span::styled("[V / Space] QuickLook Vector Preview", t.accent_style()),
+            Span::styled("[V / Space] Dedicated Vector Window", t.accent_style()),
             Span::raw("  •  "),
             Span::styled("[N / Esc] Back to results", t.dim_style()),
             Span::raw("  •  "),
