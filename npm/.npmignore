@@ -1,0 +1,7 @@
+bin/getsvg
+bin/get-svg
+bin/getsvg.exe
+bin/get-svg.exe
+*.tar.gz
+*.zip
+.DS_Store

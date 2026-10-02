@@ -27,6 +27,20 @@ and a rate limiter that stays polite toward Wikimedia's shared infrastructure.
 
 ## Installation
 
+### via npm / npx (Zero setup)
+
+Run instantly without installing:
+
+```sh
+npx getsvg
+```
+
+Or install globally via npm:
+
+```sh
+npm install -g getsvg
+```
+
 ### Pre-built binaries (recommended)
 
 One-line installers fetch the [latest GitHub release](https://github.com/avdeshjadon/get-svg/releases)
