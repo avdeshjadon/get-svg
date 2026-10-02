@@ -576,8 +576,8 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
 
     let (meta_area, preview_area) = if chunks[0].width >= 80 {
         let cols = Layout::horizontal([
-            Constraint::Min(44),
-            Constraint::Length(chunks[0].width.min(44).max(34)),
+            Constraint::Percentage(52),
+            Constraint::Percentage(48),
         ])
         .split(chunks[0]);
         (cols[0], Some(cols[1]))
