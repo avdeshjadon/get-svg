@@ -43,95 +43,123 @@ pub fn generate_viewer_html(_title: &str, svg_content: &str) -> String {
     background-image: radial-gradient(var(--grid) 1.5px, transparent 1.5px);
     background-size: 24px 24px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    color: #0f172a;
     user-select: none; -webkit-user-select: none;
+    cursor: grab;
     transition: background-color 0.2s;
   }}
-  #viewport {{
-    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-    cursor: grab;
+  body:active {{
+    cursor: grabbing;
   }}
-  #viewport:active {{ cursor: grabbing; }}
-  #canvas {{
-    transform-origin: center center;
-    display: flex; align-items: center; justify-content: center;
-    will-change: transform;
-    pointer-events: none;
+  svg {{
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    display: block;
+    shape-rendering: geometricPrecision;
+    text-rendering: geometricPrecision;
   }}
-  #canvas svg {{
-    pointer-events: auto;
-    max-width: 80vw;
-    max-height: 80vh;
+  svg image {{
+    image-rendering: high-quality;
+    image-rendering: -webkit-optimize-contrast;
   }}
 </style>
 </head>
 <body>
-<div id="viewport">
-  <div id="canvas">
-    {svg_content}
-  </div>
-</div>
-
+{svg_content}
 <script>
-let scale = 1, panX = 0, panY = 0, isDragging = false, startX = 0, startY = 0;
-const canvas = document.getElementById('canvas');
-const themes = ['', 'theme-checker', 'theme-dark'];
-let currentTheme = 0;
-
-function render() {{
-  canvas.style.transform = `translate(${{panX}}px, ${{panY}}px) scale(${{scale}})`;
-}}
-
-function zoomRel(factor) {{
-  scale = Math.max(0.05, Math.min(30, scale * factor));
-  render();
-}}
-
-function reset() {{
-  scale = 1; panX = 0; panY = 0;
-  render();
-}}
-
-function toggleTheme() {{
-  currentTheme = (currentTheme + 1) % 3;
-  document.body.className = themes[currentTheme];
-}}
-
-window.addEventListener('wheel', (e) => {{
-  e.preventDefault();
-  const delta = e.deltaY < 0 ? 1.15 : 0.87;
-  zoomRel(delta);
-}}, {{ passive: false }});
-
-window.addEventListener('mousedown', (e) => {{
-  isDragging = true;
-  startX = e.clientX - panX;
-  startY = e.clientY - panY;
-}});
-
-window.addEventListener('mousemove', (e) => {{
-  if (!isDragging) return;
-  panX = e.clientX - startX;
-  panY = e.clientY - startY;
-  render();
-}});
-
-window.addEventListener('mouseup', () => isDragging = false);
-window.addEventListener('mouseleave', () => isDragging = false);
-
-window.addEventListener('keydown', (e) => {{
-  if (e.key === 'Escape' || e.key === 'q' || e.key === 'Q') {{
-    window.close();
-  }} else if (e.key === '+' || e.key === '=') {{
-    zoomRel(1.2);
-  }} else if (e.key === '-' || e.key === '_') {{
-    zoomRel(0.8);
-  }} else if (e.key === '0' || e.key === 'r') {{
-    reset();
-  }} else if (e.key === 't' || e.key === 'T') {{
-    toggleTheme();
+const svg = document.querySelector('svg');
+if (svg) {{
+  let vb = svg.viewBox && svg.viewBox.baseVal;
+  let hasValidVb = vb && vb.width > 0 && vb.height > 0;
+  if (!hasValidVb) {{
+    let bbox = null;
+    try {{ bbox = svg.getBBox(); }} catch(e) {{}}
+    let w = parseFloat(svg.getAttribute('width')) || (bbox && bbox.width > 0 ? bbox.width : 800);
+    let h = parseFloat(svg.getAttribute('height')) || (bbox && bbox.height > 0 ? bbox.height : 600);
+    let x = parseFloat(svg.getAttribute('x')) || (bbox ? bbox.x : 0);
+    let y = parseFloat(svg.getAttribute('y')) || (bbox ? bbox.y : 0);
+    svg.setAttribute('viewBox', `${{x}} ${{y}} ${{w}} ${{h}}`);
   }}
-}});
+  svg.removeAttribute('width');
+  svg.removeAttribute('height');
+  if (!svg.getAttribute('preserveAspectRatio')) {{
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  }}
+
+  let initX = svg.viewBox.baseVal.x;
+  let initY = svg.viewBox.baseVal.y;
+  let initW = svg.viewBox.baseVal.width;
+  let initH = svg.viewBox.baseVal.height;
+
+  let curX = initX, curY = initY, curW = initW, curH = initH;
+  let isDragging = false, startClientX = 0, startClientY = 0, startVbX = 0, startVbY = 0;
+  const themes = ['', 'theme-checker', 'theme-dark'];
+  let currentTheme = 0;
+
+  function updateVb(x, y, w, h) {{
+    curX = x; curY = y; curW = w; curH = h;
+    svg.setAttribute('viewBox', `${{x}} ${{y}} ${{w}} ${{h}}`);
+  }}
+
+  function zoomAt(clientX, clientY, factor) {{
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const svgPt = pt.matrixTransform(ctm.inverse());
+
+    const newW = curW * factor;
+    const newH = curH * factor;
+    if (newW < initW * 0.002 || newW > initW * 150) return;
+
+    const newX = svgPt.x - (svgPt.x - curX) * factor;
+    const newY = svgPt.y - (svgPt.y - curY) * factor;
+    updateVb(newX, newY, newW, newH);
+  }}
+
+  window.addEventListener('wheel', (e) => {{
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 0.88 : 1.14;
+    zoomAt(e.clientX, e.clientY, factor);
+  }}, {{ passive: false }});
+
+  window.addEventListener('mousedown', (e) => {{
+    isDragging = true;
+    startClientX = e.clientX;
+    startClientY = e.clientY;
+    startVbX = curX;
+    startVbY = curY;
+  }});
+
+  window.addEventListener('mousemove', (e) => {{
+    if (!isDragging) return;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const dx = (e.clientX - startClientX) / ctm.a;
+    const dy = (e.clientY - startClientY) / ctm.d;
+    updateVb(startVbX - dx, startVbY - dy, curW, curH);
+  }});
+
+  window.addEventListener('mouseup', () => isDragging = false);
+  window.addEventListener('mouseleave', () => isDragging = false);
+
+  window.addEventListener('keydown', (e) => {{
+    if (e.key === 'Escape' || e.key === 'q' || e.key === 'Q') {{
+      window.close();
+    }} else if (e.key === '+' || e.key === '=') {{
+      zoomAt(window.innerWidth / 2, window.innerHeight / 2, 0.85);
+    }} else if (e.key === '-' || e.key === '_') {{
+      zoomAt(window.innerWidth / 2, window.innerHeight / 2, 1.18);
+    }} else if (e.key === '0' || e.key === 'r') {{
+      updateVb(initX, initY, initW, initH);
+    }} else if (e.key === 't' || e.key === 'T') {{
+      currentTheme = (currentTheme + 1) % 3;
+      document.body.className = themes[currentTheme];
+    }}
+  }});
+}}
 </script>
 </body>
 </html>"#)
@@ -139,7 +167,12 @@ window.addEventListener('keydown', (e) => {{
 
 pub fn open_vector_window(title: &str, svg_bytes: &[u8]) -> std::io::Result<PathBuf> {
     let svg_str = String::from_utf8_lossy(svg_bytes);
-    let html = generate_viewer_html(title, &svg_str);
+    let clean_svg = if let Some(idx) = svg_str.find("<svg") {
+        &svg_str[idx..]
+    } else {
+        &svg_str
+    };
+    let html = generate_viewer_html(title, clean_svg);
 
     let sanitized: String = title
         .chars()
