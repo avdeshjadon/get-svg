@@ -10,24 +10,18 @@
 
 use std::path::{Path, PathBuf};
 
-pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
-    let safe_title = title.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;");
+pub fn generate_viewer_html(_title: &str, svg_content: &str) -> String {
     format!(r#"<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{safe_title} — GET SVG</title>
+<title>GET SVG</title>
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
   :root {{
     --bg: #ffffff;
     --grid: rgba(0, 0, 0, 0.04);
-    --pill-bg: rgba(15, 23, 42, 0.92);
-    --border: rgba(255, 255, 255, 0.15);
-    --text: #f8fafc;
-    --text-dim: #94a3b8;
-    --accent: #38bdf8;
   }}
   body.theme-checker {{
     --bg: #f8fafc;
@@ -53,34 +47,6 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
     user-select: none; -webkit-user-select: none;
     transition: background-color 0.2s;
   }}
-  #header {{
-    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
-    background: var(--pill-bg);
-    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border);
-    border-radius: 9999px;
-    padding: 6px 14px;
-    display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    font-size: 13px;
-  }}
-  .pill-title {{ font-weight: 600; color: var(--accent); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
-  .divider {{ width: 1px; height: 14px; background: var(--border); }}
-  .zoom-val {{ font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; color: var(--text); font-weight: 500; }}
-  .btn {{
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }}
-  .btn:hover {{ background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }}
-  .hint {{ font-size: 11px; color: var(--text-dim); margin-left: 4px; }}
   #viewport {{
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
     cursor: grab;
@@ -100,18 +66,6 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
 </style>
 </head>
 <body>
-<div id="header">
-  <span class="pill-title" title="{safe_title}">{safe_title}</span>
-  <div class="divider"></div>
-  <button class="btn" onclick="zoomRel(0.8)" title="Zoom Out (-)">−</button>
-  <span class="zoom-val" id="zoom-text">100%</span>
-  <button class="btn" onclick="zoomRel(1.25)" title="Zoom In (+)">+</button>
-  <button class="btn" onclick="reset()" title="Reset (0)">Reset</button>
-  <button class="btn" onclick="toggleTheme()" title="Toggle Canvas (T)">Theme</button>
-  <div class="divider"></div>
-  <span class="hint">Scroll to Zoom • Drag to Pan • Esc to Close</span>
-</div>
-
 <div id="viewport">
   <div id="canvas">
     {svg_content}
@@ -121,13 +75,11 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
 <script>
 let scale = 1, panX = 0, panY = 0, isDragging = false, startX = 0, startY = 0;
 const canvas = document.getElementById('canvas');
-const zoomText = document.getElementById('zoom-text');
 const themes = ['', 'theme-checker', 'theme-dark'];
 let currentTheme = 0;
 
 function render() {{
   canvas.style.transform = `translate(${{panX}}px, ${{panY}}px) scale(${{scale}})`;
-  zoomText.textContent = `${{Math.round(scale * 100)}}%`;
 }}
 
 function zoomRel(factor) {{
@@ -152,7 +104,6 @@ window.addEventListener('wheel', (e) => {{
 }}, {{ passive: false }});
 
 window.addEventListener('mousedown', (e) => {{
-  if (e.target.closest('#header')) return;
   isDragging = true;
   startX = e.clientX - panX;
   startY = e.clientY - panY;
