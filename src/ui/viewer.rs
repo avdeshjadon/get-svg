@@ -21,32 +21,27 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
 <style>
   *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
   :root {{
-    --bg: #090b10;
-    --grid: rgba(255, 255, 255, 0.05);
-    --pill-bg: rgba(20, 24, 33, 0.85);
-    --border: rgba(255, 255, 255, 0.12);
-    --text: #f0f6fc;
-    --text-dim: #8b949e;
-    --accent: #58a6ff;
+    --bg: #ffffff;
+    --grid: rgba(0, 0, 0, 0.04);
+    --pill-bg: rgba(15, 23, 42, 0.92);
+    --border: rgba(255, 255, 255, 0.15);
+    --text: #f8fafc;
+    --text-dim: #94a3b8;
+    --accent: #38bdf8;
   }}
   body.theme-checker {{
-    --bg: #1c2128;
+    --bg: #f8fafc;
     background-image: 
-      linear-gradient(45deg, #161b22 25%, transparent 25%),
-      linear-gradient(-45deg, #161b22 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #161b22 75%),
-      linear-gradient(-45deg, transparent 75%, #161b22 75%) !important;
+      linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+      linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+      linear-gradient(-45deg, transparent 75%, #e2e8f0 75%) !important;
     background-size: 20px 20px !important;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px !important;
   }}
-  body.theme-light {{
-    --bg: #f6f8fa;
-    --grid: rgba(0, 0, 0, 0.06);
-    --pill-bg: rgba(255, 255, 255, 0.9);
-    --border: rgba(0, 0, 0, 0.15);
-    --text: #1f2328;
-    --text-dim: #656d76;
-    --accent: #0969da;
+  body.theme-dark {{
+    --bg: #090b10;
+    --grid: rgba(255, 255, 255, 0.05);
   }}
   body {{
     width: 100vw; height: 100vh; overflow: hidden;
@@ -54,7 +49,7 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
     background-image: radial-gradient(var(--grid) 1.5px, transparent 1.5px);
     background-size: 24px 24px;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    color: var(--text);
+    color: #0f172a;
     user-select: none; -webkit-user-select: none;
     transition: background-color 0.2s;
   }}
@@ -66,7 +61,7 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
     border-radius: 9999px;
     padding: 6px 14px;
     display: flex; align-items: center; gap: 10px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     font-size: 13px;
   }}
@@ -74,7 +69,7 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
   .divider {{ width: 1px; height: 14px; background: var(--border); }}
   .zoom-val {{ font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; color: var(--text); font-weight: 500; }}
   .btn {{
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
     border: 1px solid var(--border);
     color: var(--text);
     border-radius: 6px;
@@ -84,8 +79,7 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
     cursor: pointer;
     transition: all 0.15s ease;
   }}
-  body.theme-light .btn {{ background: rgba(0, 0, 0, 0.05); }}
-  .btn:hover {{ background: var(--accent); color: #fff; border-color: var(--accent); }}
+  .btn:hover {{ background: var(--accent); color: #0f172a; border-color: var(--accent); font-weight: 600; }}
   .hint {{ font-size: 11px; color: var(--text-dim); margin-left: 4px; }}
   #viewport {{
     width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
@@ -100,9 +94,8 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
   }}
   #canvas svg {{
     pointer-events: auto;
-    max-width: 75vw;
-    max-height: 75vh;
-    filter: drop-shadow(0 16px 36px rgba(0, 0, 0, 0.3));
+    max-width: 80vw;
+    max-height: 80vh;
   }}
 </style>
 </head>
@@ -129,7 +122,7 @@ pub fn generate_viewer_html(title: &str, svg_content: &str) -> String {
 let scale = 1, panX = 0, panY = 0, isDragging = false, startX = 0, startY = 0;
 const canvas = document.getElementById('canvas');
 const zoomText = document.getElementById('zoom-text');
-const themes = ['', 'theme-checker', 'theme-light'];
+const themes = ['', 'theme-checker', 'theme-dark'];
 let currentTheme = 0;
 
 function render() {{
