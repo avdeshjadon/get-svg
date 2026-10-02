@@ -41,8 +41,8 @@ fn render_svg(svg_bytes: &[u8], max_cols: u16, max_rows: u16) -> Option<Vec<Line
         return None;
     }
 
-    let max_cols = (max_cols.max(12) as u32).min(64);
-    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(44);
+    let max_cols = (max_cols.max(12) as u32).min(84);
+    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(56);
 
     let scale_x = max_cols as f32 / orig_w;
     let scale_y = max_pixel_rows as f32 / orig_h;
@@ -51,28 +51,48 @@ fn render_svg(svg_bytes: &[u8], max_cols: u16, max_rows: u16) -> Option<Vec<Line
     let target_w = ((orig_w * scale).round() as u32).clamp(4, max_cols);
     let target_pixel_h = ((orig_h * scale).round() as u32).clamp(4, max_pixel_rows);
 
-    let mut pixmap = resvg::tiny_skia::Pixmap::new(target_w, target_pixel_h)?;
-    // Fill canvas with a clean, high-contrast light card background (#f6f7f9)
-    // so dark typography (like black 'amazon.com') and brand marks are 100% legible
+    // Render at 3x supersampled resolution for razor-sharp vector rasterization
+    let super_scale = 3u32;
+    let super_w = target_w * super_scale;
+    let super_h = target_pixel_h * super_scale;
+
+    let mut pixmap = resvg::tiny_skia::Pixmap::new(super_w, super_h)?;
     pixmap.fill(resvg::tiny_skia::Color::from_rgba8(
         CARD_BG_R, CARD_BG_G, CARD_BG_B, 255,
     ));
 
     let transform = resvg::tiny_skia::Transform::from_scale(
-        target_w as f32 / orig_w,
-        target_pixel_h as f32 / orig_h,
+        super_w as f32 / orig_w,
+        super_h as f32 / orig_h,
     );
 
     resvg::render(&tree, transform, &mut pixmap.as_mut());
 
+    // Downscale from 3x to target using high-quality Lanczos3 filter
+    let super_img = image::RgbaImage::from_raw(super_w, super_h, pixmap.data().to_vec())?;
+    let downscaled = image::imageops::resize(
+        &super_img,
+        target_w,
+        target_pixel_h,
+        image::imageops::FilterType::Lanczos3,
+    );
+
     let mut pixels = Vec::with_capacity((target_w * target_pixel_h) as usize);
     for y in 0..target_pixel_h {
         for x in 0..target_w {
-            if let Some(c) = pixmap.pixel(x, y) {
-                pixels.push((c.red(), c.green(), c.blue(), 255));
-            } else {
-                pixels.push((CARD_BG_R, CARD_BG_G, CARD_BG_B, 255));
+            let px = downscaled.get_pixel(x, y);
+            let mut r = px[0] as f32;
+            let mut g = px[1] as f32;
+            let mut b = px[2] as f32;
+            // Contrast boost for typography & dark brand marks against the light card
+            let luma = 0.299 * r + 0.587 * g + 0.114 * b;
+            if luma < 210.0 {
+                let curve = (luma / 210.0).powf(1.35);
+                r *= curve;
+                g *= curve;
+                b *= curve;
             }
+            pixels.push((r.round() as u8, g.round() as u8, b.round() as u8, 255));
         }
     }
 
@@ -86,8 +106,8 @@ fn render_raster(bytes: &[u8], max_cols: u16, max_rows: u16) -> Option<Vec<Line<
         return None;
     }
 
-    let max_cols = (max_cols.max(12) as u32).min(64);
-    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(44);
+    let max_cols = (max_cols.max(12) as u32).min(84);
+    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(56);
 
     let scale_x = max_cols as f32 / orig_w as f32;
     let scale_y = max_pixel_rows as f32 / orig_h as f32;
@@ -100,7 +120,7 @@ fn render_raster(bytes: &[u8], max_cols: u16, max_rows: u16) -> Option<Vec<Line<
         &img.to_rgba8(),
         target_w,
         target_pixel_h,
-        image::imageops::FilterType::Triangle,
+        image::imageops::FilterType::Lanczos3,
     );
 
     let bg_r = CARD_BG_R as u16;

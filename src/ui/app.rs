@@ -61,6 +61,7 @@ pub enum AppEvent {
     PreviewReady {
         url: String,
         fallback: Option<String>,
+        raw_bytes: Option<Vec<u8>>,
         lines: Vec<ratatui::text::Line<'static>>,
     },
     PreviewFailed {
@@ -130,6 +131,7 @@ pub struct App {
     pub status: String,
 
     pub preview_cache: std::collections::HashMap<String, Vec<ratatui::text::Line<'static>>>,
+    pub preview_bytes_cache: std::collections::HashMap<String, Vec<u8>>,
     pub preview_loading: std::collections::HashSet<String>,
 
     // pending search bookkeeping
@@ -180,6 +182,7 @@ impl App {
                 crate::TAGLINE
             ),
             preview_cache: std::collections::HashMap::new(),
+            preview_bytes_cache: std::collections::HashMap::new(),
             preview_loading: std::collections::HashSet::new(),
             pending_search_query: String::new(),
             pending_refresh: false,
@@ -365,6 +368,11 @@ impl App {
     fn on_key_details(&mut self, key: KeyEvent) {
         if self.keymap.matches(&key, self.keymap.quit) {
             self.should_quit = true;
+            return;
+        }
+        // 'v', 'V', 'o', 'O', ' ' -> Open native vector preview (QuickLook on macOS)
+        if matches!(key.code, KeyCode::Char('v' | 'V' | 'o' | 'O' | ' ')) {
+            self.open_native_preview();
             return;
         }
         // 'n', 'N', Esc, 'b' -> decline download / go back to Results
@@ -678,9 +686,10 @@ impl App {
         let Some(asset) = self.assets.get(index) else {
             return;
         };
-        let thumb_url = asset.thumb_url.clone();
+        // Prefer direct vector SVG url over downsampled Wikimedia thumbnail
         let direct_url = asset.url.clone();
-        let Some(url) = thumb_url.as_ref().or(direct_url.as_ref()).cloned() else {
+        let thumb_url = asset.thumb_url.clone();
+        let Some(url) = direct_url.as_ref().or(thumb_url.as_ref()).cloned() else {
             return;
         };
         if self.preview_cache.contains_key(&url) || self.preview_loading.contains(&url) {
@@ -688,7 +697,7 @@ impl App {
         }
 
         self.preview_loading.insert(url.clone());
-        if let Some(fb) = &direct_url {
+        if let Some(fb) = &thumb_url {
             self.preview_loading.insert(fb.clone());
         }
 
@@ -696,7 +705,7 @@ impl App {
         let client = self.provider.client();
         let user_agent = self.settings.user_agent();
         let cancel = self.cancel.child_token();
-        let fallback = direct_url.clone();
+        let fallback = thumb_url.clone();
 
         tokio::spawn(async move {
             let fetch = |target: String| {
@@ -744,10 +753,11 @@ impl App {
             }
 
             if let Some(bytes) = fetched_bytes {
-                if let Some(lines) = crate::ui::preview::render_halfblocks(&bytes, 52, 16) {
+                if let Some(lines) = crate::ui::preview::render_halfblocks(&bytes, 78, 22) {
                     let _ = tx.send(AppEvent::PreviewReady {
                         url: url.clone(),
                         fallback,
+                        raw_bytes: Some(bytes),
                         lines,
                     });
                     return;
@@ -755,6 +765,88 @@ impl App {
             }
             let _ = tx.send(AppEvent::PreviewFailed { url });
         });
+    }
+
+    pub fn open_native_preview(&mut self) {
+        let Some(asset) = self.assets.get(self.detail_index).cloned() else {
+            return;
+        };
+
+        let direct_url = asset.url.clone();
+        let thumb_url = asset.thumb_url.clone();
+        let candidate_bytes = direct_url
+            .as_ref()
+            .and_then(|u| self.preview_bytes_cache.get(u))
+            .or_else(|| thumb_url.as_ref().and_then(|u| self.preview_bytes_cache.get(u)))
+            .cloned();
+
+        let filename = if asset.file_name.ends_with(".svg") {
+            asset.file_name.clone()
+        } else {
+            format!("{}.svg", asset.file_name)
+        };
+        let temp_path = std::env::temp_dir().join(format!("getsvg_preview_{}", filename));
+
+        if let Some(bytes) = candidate_bytes {
+            let _ = std::fs::write(&temp_path, &bytes);
+            Self::launch_system_viewer(&temp_path);
+            self.status = format!("Preview opened: {} (press Space or Esc to close)", filename);
+            return;
+        }
+
+        if let Some(url) = direct_url.or(thumb_url) {
+            let client = self.provider.client();
+            let user_agent = self.settings.user_agent();
+            self.status = format!("Fetching {} for vector preview…", filename);
+            tokio::spawn(async move {
+                if let Ok(resp) = client
+                    .get(&url)
+                    .header(reqwest::header::USER_AGENT, user_agent)
+                    .header(reqwest::header::REFERER, "https://commons.wikimedia.org/")
+                    .send()
+                    .await
+                {
+                    if let Ok(b) = resp.bytes().await {
+                        let _ = std::fs::write(&temp_path, &b);
+                        Self::launch_system_viewer(&temp_path);
+                    }
+                }
+            });
+        }
+    }
+
+    fn launch_system_viewer(path: &std::path::Path) {
+        #[cfg(target_os = "macos")]
+        {
+            let res = std::process::Command::new("qlmanage")
+                .args(["-p", path.to_str().unwrap_or_default()])
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn();
+            if res.is_err() {
+                let _ = std::process::Command::new("open")
+                    .arg(path.to_str().unwrap_or_default())
+                    .stdout(std::process::Stdio::null())
+                    .stderr(std::process::Stdio::null())
+                    .spawn();
+            }
+        }
+        #[cfg(target_os = "linux")]
+        {
+            let _ = std::process::Command::new("xdg-open")
+                .arg(path.to_str().unwrap_or_default())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn();
+        }
+        #[cfg(target_os = "windows")]
+        {
+            let _ = std::process::Command::new("cmd")
+                .args(["/c", "start", "", path.to_str().unwrap_or_default()])
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn();
+        }
     }
 
     pub fn trigger_preview_load(&mut self) {
@@ -903,8 +995,19 @@ impl App {
                     zip.result = Some(result);
                 }
             }
-            AppEvent::PreviewReady { url, fallback, lines } => {
+            AppEvent::PreviewReady {
+                url,
+                fallback,
+                raw_bytes,
+                lines,
+            } => {
                 self.preview_loading.remove(&url);
+                if let Some(bytes) = raw_bytes {
+                    self.preview_bytes_cache.insert(url.clone(), bytes.clone());
+                    if let Some(fb) = &fallback {
+                        self.preview_bytes_cache.insert(fb.clone(), bytes);
+                    }
+                }
                 if let Some(fb) = &fallback {
                     self.preview_loading.remove(fb);
                     self.preview_cache.insert(fb.clone(), lines.clone());

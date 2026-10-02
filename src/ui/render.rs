@@ -611,28 +611,28 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
 
     if let Some(p_area) = preview_area {
         let p_block = Block::bordered()
-            .title(Span::styled(" Visual Preview ", t.title_style()))
+            .title(Span::styled(" Visual Preview [V / Space for Retina Vector] ", t.title_style()))
             .border_style(t.border_active_style())
             .padding(Padding::horizontal(1));
 
         let lines_opt = asset
-            .thumb_url
+            .url
             .as_deref()
             .and_then(|u| app.preview_cache.get(u))
             .or_else(|| {
                 asset
-                    .url
+                    .thumb_url
                     .as_deref()
                     .and_then(|u| app.preview_cache.get(u))
             });
 
         let is_loading = asset
-            .thumb_url
+            .url
             .as_deref()
             .map(|u| app.preview_loading.contains(u))
             .unwrap_or(false)
             || asset
-                .url
+                .thumb_url
                 .as_deref()
                 .map(|u| app.preview_loading.contains(u))
                 .unwrap_or(false);
@@ -680,12 +680,16 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         Line::from(vec![
             Span::styled(" [Y] Yes (Download this file) ", t.selected_style()),
             Span::raw("    "),
+            Span::styled(" [V] Instant Vector Preview ", t.bold_accent()),
+            Span::raw("    "),
             Span::styled(" [N] No (Back to results) ", t.border_style()),
         ])
         .alignment(Alignment::Center),
         Line::default(),
         Line::from(vec![
             Span::styled("[Y / Enter] Download file", t.bold_accent()),
+            Span::raw("  •  "),
+            Span::styled("[V / Space] QuickLook Vector Preview", t.accent_style()),
             Span::raw("  •  "),
             Span::styled("[N / Esc] Back to results", t.dim_style()),
             Span::raw("  •  "),
