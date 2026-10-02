@@ -41,8 +41,8 @@ fn render_svg(svg_bytes: &[u8], max_cols: u16, max_rows: u16) -> Option<Vec<Line
         return None;
     }
 
-    let max_cols = (max_cols.max(12) as u32).min(84);
-    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(56);
+    let max_cols = (max_cols.max(12) as u32).min(52);
+    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(26);
 
     let scale_x = max_cols as f32 / orig_w;
     let scale_y = max_pixel_rows as f32 / orig_h;
@@ -106,8 +106,8 @@ fn render_raster(bytes: &[u8], max_cols: u16, max_rows: u16) -> Option<Vec<Line<
         return None;
     }
 
-    let max_cols = (max_cols.max(12) as u32).min(84);
-    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(56);
+    let max_cols = (max_cols.max(12) as u32).min(52);
+    let max_pixel_rows = ((max_rows.max(6) as u32) * 2).min(26);
 
     let scale_x = max_cols as f32 / orig_w as f32;
     let scale_y = max_pixel_rows as f32 / orig_h as f32;

@@ -574,22 +574,35 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         ]));
     }
 
-    let (meta_area, preview_area) = if chunks[0].width >= 80 {
+    let (meta_area, preview_area, hint_area) = if chunks[0].width >= 80 {
+        let p_width = 46u16.min(chunks[0].width / 3).max(36);
         let cols = Layout::horizontal([
-            Constraint::Percentage(52),
-            Constraint::Percentage(48),
+            Constraint::Min(45),
+            Constraint::Length(p_width),
         ])
         .split(chunks[0]);
-        (cols[0], Some(cols[1]))
+
+        let right_rows = Layout::vertical([
+            Constraint::Length(15),
+            Constraint::Min(0),
+        ])
+        .split(cols[1]);
+
+        let h_area = if right_rows[1].height >= 5 {
+            Some(right_rows[1])
+        } else {
+            None
+        };
+        (cols[0], Some(right_rows[0]), h_area)
     } else if chunks[0].height >= 24 {
         let rows = Layout::vertical([
-            Constraint::Length(10),
+            Constraint::Length(12),
             Constraint::Min(0),
         ])
         .split(chunks[0]);
-        (rows[1], Some(rows[0]))
+        (rows[1], Some(rows[0]), None)
     } else {
-        (chunks[0], None)
+        (chunks[0], None, None)
     };
 
     let detail_block = Block::bordered()
@@ -611,7 +624,7 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
 
     if let Some(p_area) = preview_area {
         let p_block = Block::bordered()
-            .title(Span::styled(" Visual Preview [V / Space for Retina Vector] ", t.title_style()))
+            .title(Span::styled(" Visual Preview ", t.title_style()))
             .border_style(t.border_active_style())
             .padding(Padding::horizontal(1));
 
@@ -664,6 +677,33 @@ fn draw_details(f: &mut Frame, area: Rect, app: &App) {
         };
 
         f.render_widget(p_content, p_area);
+    }
+
+    if let Some(h_area) = hint_area {
+        let tip_block = Block::bordered()
+            .title(Span::styled(" Actions & Preview ", t.title_style()))
+            .border_style(t.border_style())
+            .padding(Padding::horizontal(1));
+        let tip_p = Paragraph::new(vec![
+            Line::default(),
+            Line::from(vec![
+                Span::styled(" [V / Space] ", t.bold_accent()),
+                Span::styled("Retina Vector Preview", t.text_style()),
+            ]),
+            Line::from(Span::styled("  macOS QuickLook floating window", t.dim_style())),
+            Line::default(),
+            Line::from(vec![
+                Span::styled(" [Y / Enter] ", t.selected_style()),
+                Span::styled("Download to disk", t.text_style()),
+            ]),
+            Line::default(),
+            Line::from(vec![
+                Span::styled(" [N / Esc]   ", t.dim_style()),
+                Span::styled("Back to search results", t.dim_style()),
+            ]),
+        ])
+        .block(tip_block);
+        f.render_widget(tip_p, h_area);
     }
 
     let action_block = Block::bordered()

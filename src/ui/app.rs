@@ -753,7 +753,7 @@ impl App {
             }
 
             if let Some(bytes) = fetched_bytes {
-                if let Some(lines) = crate::ui::preview::render_halfblocks(&bytes, 78, 22) {
+                if let Some(lines) = crate::ui::preview::render_halfblocks(&bytes, 42, 13) {
                     let _ = tx.send(AppEvent::PreviewReady {
                         url: url.clone(),
                         fallback,
