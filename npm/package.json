@@ -1,6 +1,9 @@
 {
-  "name": "getsvg",
+  "name": "@avdeshjadon/get-svg",
   "version": "0.2.3",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "Discover, inspect, and download SVG assets from Wikimedia Commons from your terminal.",
   "main": "bin/run.js",
   "bin": {
