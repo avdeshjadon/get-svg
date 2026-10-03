@@ -210,15 +210,19 @@ pub async fn cmd_direct_brand(
             }
         }
         None => {
+            let base_dir = settings.download_dir.clone();
+            std::fs::create_dir_all(&base_dir)?;
             let filename = format!("{}.svg", crate::brands::slugify(&brand_name));
-            PathBuf::from(filename)
+            base_dir.join(filename)
         }
     };
+
+    let pretty_path = crate::config::contract_tilde(&target_file);
 
     if target_file.exists() && !overwrite {
         eprintln!(
             "\x1b[1;33m\u{26A0}\x1b[0m File '{}' already exists. Use `--overwrite` to replace.",
-            target_file.display()
+            pretty_path
         );
         return Ok(0);
     }
@@ -251,7 +255,7 @@ pub async fn cmd_direct_brand(
 
     eprintln!(
         "\x1b[1;32m\u{2713} Saved to {}\x1b[0m ({}, {}) in {}",
-        target_file.display(),
+        pretty_path,
         size_human,
         license,
         crate::models::format_ms(started.elapsed().as_millis() as u64)

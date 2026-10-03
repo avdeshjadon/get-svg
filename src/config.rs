@@ -1,6 +1,6 @@
 //! Configuration: `~/.config/get-svg/config.toml` (platform config dir).
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -234,6 +234,15 @@ pub(crate) fn expand_tilde(path: PathBuf) -> PathBuf {
         }
     }
     path
+}
+
+pub fn contract_tilde(path: &Path) -> String {
+    if let Some(home) = dirs::home_dir() {
+        if let Ok(stripped) = path.strip_prefix(&home) {
+            return format!("~/{}", stripped.display());
+        }
+    }
+    path.display().to_string()
 }
 
 /// Contacts end up in HTTP headers; strip anything that could smuggle
