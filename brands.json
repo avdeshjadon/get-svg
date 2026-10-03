@@ -3,32 +3,48 @@
     "amazon": {
       "name": "Amazon",
       "file": "File:Amazon logo.svg",
-      "aliases": ["amazon.com", "amzn"]
+      "aliases": [
+        "amazon.com",
+        "amzn"
+      ]
     },
     "amazon prime": {
       "name": "Amazon Prime",
       "file": "File:Amazon Prime Logo.svg",
-      "aliases": ["prime", "prime video", "amazon prime video"]
+      "aliases": [
+        "prime",
+        "prime video",
+        "amazon prime video"
+      ]
     },
     "amazon music": {
       "name": "Amazon Music",
       "file": "File:Amazon Music (Logo).svg",
-      "aliases": ["amazon-music"]
+      "aliases": [
+        "amazon-music"
+      ]
     },
     "amazon web services": {
       "name": "Amazon Web Services",
       "file": "File:Amazon Web Services Logo.svg",
-      "aliases": ["aws"]
+      "aliases": [
+        "aws"
+      ]
     },
     "google": {
       "name": "Google",
       "file": "File:Google 2015 logo.svg",
-      "aliases": ["google logo"]
+      "aliases": [
+        "google logo"
+      ]
     },
     "apple": {
       "name": "Apple",
       "file": "File:Apple logo black.svg",
-      "aliases": ["apple logo", "apple inc"]
+      "aliases": [
+        "apple logo",
+        "apple inc"
+      ]
     },
     "microsoft": {
       "name": "Microsoft",
@@ -37,12 +53,16 @@
     "meta": {
       "name": "Meta",
       "file": "File:Meta Platforms Inc. logo.svg",
-      "aliases": ["facebook"]
+      "aliases": [
+        "facebook"
+      ]
     },
     "instagram": {
       "name": "Instagram",
       "file": "File:Instagram logo 2016.svg",
-      "aliases": ["insta"]
+      "aliases": [
+        "insta"
+      ]
     },
     "whatsapp": {
       "name": "WhatsApp",
@@ -79,7 +99,9 @@
     "x": {
       "name": "X",
       "file": "File:X logo 2023.svg",
-      "aliases": ["x.com"]
+      "aliases": [
+        "x.com"
+      ]
     },
     "discord": {
       "name": "Discord",
@@ -104,6 +126,2137 @@
     "tesla": {
       "name": "Tesla",
       "file": "File:Tesla Motors Logo.svg"
+    },
+    "cloudflare": {
+      "name": "Cloudflare",
+      "file": "File:Cloudflare Logo.svg",
+      "aliases": [
+        "cf"
+      ]
+    },
+    "vercel": {
+      "name": "Vercel",
+      "file": "File:Vercel logo.svg"
+    },
+    "netlify": {
+      "name": "Netlify",
+      "file": "File:Netlify logo.svg"
+    },
+    "heroku": {
+      "name": "Heroku",
+      "file": "File:Heroku logo.svg"
+    },
+    "digitalocean": {
+      "name": "DigitalOcean",
+      "file": "File:DigitalOcean logo.svg"
+    },
+    "render": {
+      "name": "Render",
+      "file": "File:Render logo.svg"
+    },
+    "railway": {
+      "name": "Railway",
+      "file": "File:Railway logo.svg"
+    },
+    "fly.io": {
+      "name": "Fly.io",
+      "file": "File:Fly.io logo.svg",
+      "aliases": [
+        "flyio"
+      ]
+    },
+    "linode": {
+      "name": "Linode",
+      "file": "File:Linode logo.svg"
+    },
+    "hetzner": {
+      "name": "Hetzner",
+      "file": "File:Hetzner logo.svg"
+    },
+    "ovhcloud": {
+      "name": "OVHcloud",
+      "file": "File:OVHcloud logo 2020.svg"
+    },
+    "oracle cloud": {
+      "name": "Oracle Cloud",
+      "file": "File:Oracle Cloud logo.svg",
+      "aliases": [
+        "oci"
+      ]
+    },
+    "google cloud": {
+      "name": "Google Cloud",
+      "file": "File:Google Cloud logo.svg",
+      "aliases": [
+        "gcp"
+      ]
+    },
+    "microsoft azure": {
+      "name": "Microsoft Azure",
+      "file": "File:Microsoft Azure logo.svg",
+      "aliases": [
+        "azure"
+      ]
+    },
+    "cloudflare workers": {
+      "name": "Cloudflare Workers",
+      "file": "File:Cloudflare Workers logo.svg"
+    },
+    "docker": {
+      "name": "Docker",
+      "file": "File:Docker Logo.svg"
+    },
+    "kubernetes": {
+      "name": "Kubernetes",
+      "file": "File:Kubernetes logo.svg",
+      "aliases": [
+        "k8s"
+      ]
+    },
+    "helm": {
+      "name": "Helm",
+      "file": "File:Helm logo.svg"
+    },
+    "podman": {
+      "name": "Podman",
+      "file": "File:Podman logo.svg"
+    },
+    "terraform": {
+      "name": "Terraform",
+      "file": "File:Terraform logo.svg"
+    },
+    "pulumi": {
+      "name": "Pulumi",
+      "file": "File:Pulumi logo.svg"
+    },
+    "ansible": {
+      "name": "Ansible",
+      "file": "File:Ansible logo.svg"
+    },
+    "vagrant": {
+      "name": "Vagrant",
+      "file": "File:Vagrant logo.svg"
+    },
+    "nginx": {
+      "name": "NGINX",
+      "file": "File:Nginx logo.svg"
+    },
+    "traefik": {
+      "name": "Traefik",
+      "file": "File:Traefik logo.svg"
+    },
+    "caddy": {
+      "name": "Caddy",
+      "file": "File:Caddy logo.svg"
+    },
+    "github actions": {
+      "name": "GitHub Actions",
+      "file": "File:GitHub Actions logo.svg"
+    },
+    "gitlab ci": {
+      "name": "GitLab CI/CD",
+      "file": "File:GitLab CI logo.svg",
+      "aliases": [
+        "gitlab-ci",
+        "gitlab cicd"
+      ]
+    },
+    "circleci": {
+      "name": "CircleCI",
+      "file": "File:CircleCI logo.svg"
+    },
+    "jenkins": {
+      "name": "Jenkins",
+      "file": "File:Jenkins logo.svg"
+    },
+    "argo": {
+      "name": "Argo CD",
+      "file": "File:Argo CD logo.svg",
+      "aliases": [
+        "argocd"
+      ]
+    },
+    "fluxcd": {
+      "name": "Flux CD",
+      "file": "File:Flux logo.svg",
+      "aliases": [
+        "flux"
+      ]
+    },
+    "gitlab": {
+      "name": "GitLab",
+      "file": "File:GitLab logo.svg"
+    },
+    "bitbucket": {
+      "name": "Bitbucket",
+      "file": "File:Bitbucket logo.svg"
+    },
+    "gitea": {
+      "name": "Gitea",
+      "file": "File:Gitea logo.svg"
+    },
+    "forgejo": {
+      "name": "Forgejo",
+      "file": "File:Forgejo logo.svg"
+    },
+    "jira": {
+      "name": "Jira",
+      "file": "File:Jira Software logo.svg"
+    },
+    "confluence": {
+      "name": "Confluence",
+      "file": "File:Confluence logo.svg"
+    },
+    "linear": {
+      "name": "Linear",
+      "file": "File:Linear logo.svg"
+    },
+    "notion": {
+      "name": "Notion",
+      "file": "File:Notion-logo.svg"
+    },
+    "atlassian": {
+      "name": "Atlassian",
+      "file": "File:Atlassian logo.svg"
+    },
+    "trello": {
+      "name": "Trello",
+      "file": "File:Trello logo.svg"
+    },
+    "asana": {
+      "name": "Asana",
+      "file": "File:Asana logo.svg"
+    },
+    "monday": {
+      "name": "Monday.com",
+      "file": "File:Monday.com logo.svg",
+      "aliases": [
+        "mondaycom"
+      ]
+    },
+    "clickup": {
+      "name": "ClickUp",
+      "file": "File:ClickUp logo.svg"
+    },
+    "height": {
+      "name": "Height",
+      "file": "File:Height logo.svg"
+    },
+    "figma": {
+      "name": "Figma",
+      "file": "File:Figma logo.svg"
+    },
+    "canva": {
+      "name": "Canva",
+      "file": "File:Canva logo.svg"
+    },
+    "sketch": {
+      "name": "Sketch",
+      "file": "File:Sketch Logo.svg"
+    },
+    "adobe": {
+      "name": "Adobe",
+      "file": "File:Adobe logo.svg"
+    },
+    "adobe photoshop": {
+      "name": "Adobe Photoshop",
+      "file": "File:Adobe Photoshop logo.svg",
+      "aliases": [
+        "photoshop"
+      ]
+    },
+    "adobe illustrator": {
+      "name": "Adobe Illustrator",
+      "file": "File:Adobe Illustrator logo.svg",
+      "aliases": [
+        "illustrator"
+      ]
+    },
+    "adobe xd": {
+      "name": "Adobe XD",
+      "file": "File:Adobe XD logo.svg"
+    },
+    "affinity designer": {
+      "name": "Affinity Designer",
+      "file": "File:Affinity Designer logo.svg"
+    },
+    "postman": {
+      "name": "Postman",
+      "file": "File:Postman logo.svg"
+    },
+    "insomnia": {
+      "name": "Insomnia",
+      "file": "File:Insomnia logo.svg"
+    },
+    "hoppscotch": {
+      "name": "Hoppscotch",
+      "file": "File:Hoppscotch logo.svg"
+    },
+    "grafana": {
+      "name": "Grafana",
+      "file": "File:Grafana logo.svg"
+    },
+    "prometheus": {
+      "name": "Prometheus",
+      "file": "File:Prometheus logo.svg"
+    },
+    "datadog": {
+      "name": "Datadog",
+      "file": "File:Datadog logo.svg"
+    },
+    "sentry": {
+      "name": "Sentry",
+      "file": "File:Sentry Logo.svg"
+    },
+    "new relic": {
+      "name": "New Relic",
+      "file": "File:New Relic logo.svg",
+      "aliases": [
+        "newrelic"
+      ]
+    },
+    "elastic": {
+      "name": "Elastic",
+      "file": "File:Elastic logo.svg"
+    },
+    "elasticsearch": {
+      "name": "Elasticsearch",
+      "file": "File:Elasticsearch logo.svg"
+    },
+    "logstash": {
+      "name": "Logstash",
+      "file": "File:Logstash logo.svg"
+    },
+    "kibana": {
+      "name": "Kibana",
+      "file": "File:Kibana logo.svg"
+    },
+    "loki": {
+      "name": "Loki",
+      "file": "File:Loki logo.svg"
+    },
+    "tempo": {
+      "name": "Grafana Tempo",
+      "file": "File:Grafana Tempo logo.svg"
+    },
+    "jaeger": {
+      "name": "Jaeger",
+      "file": "File:Jaeger logo.svg"
+    },
+    "zipkin": {
+      "name": "Zipkin",
+      "file": "File:Zipkin logo.svg"
+    },
+    "opentelemetry": {
+      "name": "OpenTelemetry",
+      "file": "File:OpenTelemetry logo.svg",
+      "aliases": [
+        "otel"
+      ]
+    },
+    "pagerduty": {
+      "name": "PagerDuty",
+      "file": "File:PagerDuty logo.svg"
+    },
+    "oncall": {
+      "name": "Grafana OnCall",
+      "file": "File:Grafana OnCall logo.svg"
+    },
+    "postgresql": {
+      "name": "PostgreSQL",
+      "file": "File:Postgresql elephant.svg",
+      "aliases": [
+        "postgres",
+        "psql"
+      ]
+    },
+    "mysql": {
+      "name": "MySQL",
+      "file": "File:MySQL logo.svg"
+    },
+    "mariadb": {
+      "name": "MariaDB",
+      "file": "File:MariaDB logo.svg"
+    },
+    "sqlite": {
+      "name": "SQLite",
+      "file": "File:SQLite logo.svg"
+    },
+    "redis": {
+      "name": "Redis",
+      "file": "File:Redis logo.svg"
+    },
+    "mongodb": {
+      "name": "MongoDB",
+      "file": "File:MongoDB logo.svg"
+    },
+    "cassandra": {
+      "name": "Apache Cassandra",
+      "file": "File:Apache Cassandra logo.svg"
+    },
+    "scylladb": {
+      "name": "ScyllaDB",
+      "file": "File:ScyllaDB logo.svg"
+    },
+    "clickhouse": {
+      "name": "ClickHouse",
+      "file": "File:ClickHouse logo.svg"
+    },
+    "snowflake": {
+      "name": "Snowflake",
+      "file": "File:Snowflake logo.svg"
+    },
+    "bigquery": {
+      "name": "BigQuery",
+      "file": "File:Google BigQuery logo.svg"
+    },
+    "supabase": {
+      "name": "Supabase",
+      "file": "File:Supabase logo.svg"
+    },
+    "planetscale": {
+      "name": "PlanetScale",
+      "file": "File:PlanetScale logo.svg"
+    },
+    "neon": {
+      "name": "Neon",
+      "file": "File:Neon logo.svg"
+    },
+    "cockroachdb": {
+      "name": "CockroachDB",
+      "file": "File:CockroachDB logo.svg",
+      "aliases": [
+        "cockroach"
+      ]
+    },
+    "timescaledb": {
+      "name": "TimescaleDB",
+      "file": "File:TimescaleDB logo.svg"
+    },
+    "turso": {
+      "name": "Turso",
+      "file": "File:Turso logo.svg"
+    },
+    "fauna": {
+      "name": "Fauna",
+      "file": "File:Fauna logo.svg"
+    },
+    "minio": {
+      "name": "MinIO",
+      "file": "File:MinIO logo.svg"
+    },
+    "r2": {
+      "name": "Cloudflare R2",
+      "file": "File:Cloudflare R2 logo.svg"
+    },
+    "s3": {
+      "name": "Amazon S3",
+      "file": "File:Amazon S3 logo.svg"
+    },
+    "dynamodb": {
+      "name": "Amazon DynamoDB",
+      "file": "File:Amazon DynamoDB logo.svg"
+    },
+    "firebase firestore": {
+      "name": "Cloud Firestore",
+      "file": "File:Cloud Firestore logo.svg",
+      "aliases": [
+        "firestore"
+      ]
+    },
+    "surrealdb": {
+      "name": "SurrealDB",
+      "file": "File:SurrealDB logo.svg"
+    },
+    "drizzle": {
+      "name": "Drizzle ORM",
+      "file": "File:Drizzle ORM logo.svg"
+    },
+    "prisma": {
+      "name": "Prisma",
+      "file": "File:Prisma logo.svg"
+    },
+    "openai": {
+      "name": "OpenAI",
+      "file": "File:OpenAI logo.svg"
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "file": "File:Anthropic logo.svg"
+    },
+    "claude": {
+      "name": "Claude",
+      "file": "File:Claude.ai logo.svg"
+    },
+    "google gemini": {
+      "name": "Google Gemini",
+      "file": "File:Google Gemini logo.svg",
+      "aliases": [
+        "gemini"
+      ]
+    },
+    "mistral": {
+      "name": "Mistral AI",
+      "file": "File:Mistral AI logo.svg"
+    },
+    "huggingface": {
+      "name": "Hugging Face",
+      "file": "File:Hugging Face logo.svg",
+      "aliases": [
+        "hugging face"
+      ]
+    },
+    "xai": {
+      "name": "xAI",
+      "file": "File:XAI logo.svg"
+    },
+    "grok": {
+      "name": "Grok",
+      "file": "File:Grok logo.svg"
+    },
+    "groq": {
+      "name": "Groq",
+      "file": "File:Groq logo.svg"
+    },
+    "cohere": {
+      "name": "Cohere",
+      "file": "File:Cohere logo.svg"
+    },
+    "perplexity": {
+      "name": "Perplexity",
+      "file": "File:Perplexity AI logo.svg"
+    },
+    "replicate": {
+      "name": "Replicate",
+      "file": "File:Replicate logo.svg"
+    },
+    "ollama": {
+      "name": "Ollama",
+      "file": "File:Ollama logo.svg"
+    },
+    "meta llama": {
+      "name": "Meta LLaMA",
+      "file": "File:Meta LLaMA logo.svg",
+      "aliases": [
+        "llama"
+      ]
+    },
+    "stability ai": {
+      "name": "Stability AI",
+      "file": "File:Stability AI logo.svg",
+      "aliases": [
+        "stability"
+      ]
+    },
+    "midjourney": {
+      "name": "Midjourney",
+      "file": "File:Midjourney logo.svg"
+    },
+    "dall-e": {
+      "name": "DALL-E",
+      "file": "File:DALL-E 3 logo.svg",
+      "aliases": [
+        "dalle"
+      ]
+    },
+    "ideogram": {
+      "name": "Ideogram",
+      "file": "File:Ideogram logo.svg"
+    },
+    "flux": {
+      "name": "Flux",
+      "file": "File:Flux logo.svg"
+    },
+    "leonardo": {
+      "name": "Leonardo.ai",
+      "file": "File:Leonardo.ai logo.svg",
+      "aliases": [
+        "leonardoai"
+      ]
+    },
+    "langchain": {
+      "name": "LangChain",
+      "file": "File:LangChain logo.svg"
+    },
+    "langgraph": {
+      "name": "LangGraph",
+      "file": "File:LangGraph logo.svg"
+    },
+    "llamaindex": {
+      "name": "LlamaIndex",
+      "file": "File:LlamaIndex logo.svg"
+    },
+    "pinecone": {
+      "name": "Pinecone",
+      "file": "File:Pinecone logo.svg"
+    },
+    "weaviate": {
+      "name": "Weaviate",
+      "file": "File:Weaviate logo.svg"
+    },
+    "chroma": {
+      "name": "Chroma",
+      "file": "File:Chroma logo.svg"
+    },
+    "milvus": {
+      "name": "Milvus",
+      "file": "File:Milvus logo.svg"
+    },
+    "qdrant": {
+      "name": "Qdrant",
+      "file": "File:Qdrant logo.svg"
+    },
+    "modal": {
+      "name": "Modal",
+      "file": "File:Modal logo.svg"
+    },
+    "runpod": {
+      "name": "RunPod",
+      "file": "File:RunPod logo.svg"
+    },
+    "comfyui": {
+      "name": "ComfyUI",
+      "file": "File:ComfyUI logo.svg",
+      "aliases": [
+        "comfy ui"
+      ]
+    },
+    "visual studio code": {
+      "name": "Visual Studio Code",
+      "file": "File:Visual Studio Code 1.35 icon.svg",
+      "aliases": [
+        "vscode"
+      ]
+    },
+    "cursor": {
+      "name": "Cursor",
+      "file": "File:Cursor logo.svg"
+    },
+    "windsurf": {
+      "name": "Windsurf",
+      "file": "File:Windsurf logo.svg"
+    },
+    "github copilot": {
+      "name": "GitHub Copilot",
+      "file": "File:GitHub Copilot logo.svg",
+      "aliases": [
+        "copilot"
+      ]
+    },
+    "jetbrains": {
+      "name": "JetBrains",
+      "file": "File:JetBrains logo.svg"
+    },
+    "intellij idea": {
+      "name": "IntelliJ IDEA",
+      "file": "File:IntelliJ IDEA logo.svg",
+      "aliases": [
+        "intellij"
+      ]
+    },
+    "webstorm": {
+      "name": "WebStorm",
+      "file": "File:WebStorm logo.svg"
+    },
+    "pycharm": {
+      "name": "PyCharm",
+      "file": "File:PyCharm logo.svg"
+    },
+    "phpstorm": {
+      "name": "PhpStorm",
+      "file": "File:PhpStorm logo.svg"
+    },
+    "clion": {
+      "name": "CLion",
+      "file": "File:CLion logo.svg"
+    },
+    "rider": {
+      "name": "JetBrains Rider",
+      "file": "File:JetBrains Rider logo.svg"
+    },
+    "datagrip": {
+      "name": "DataGrip",
+      "file": "File:DataGrip logo.svg"
+    },
+    "goland": {
+      "name": "GoLand",
+      "file": "File:GoLand logo.svg"
+    },
+    "rubymine": {
+      "name": "RubyMine",
+      "file": "File:RubyMine logo.svg"
+    },
+    "android studio": {
+      "name": "Android Studio",
+      "file": "File:Android Studio logo.svg"
+    },
+    "xcode": {
+      "name": "Xcode",
+      "file": "File:Xcode logo.svg"
+    },
+    "vim": {
+      "name": "Vim",
+      "file": "File:Vim logo.svg"
+    },
+    "neovim": {
+      "name": "Neovim",
+      "file": "File:Neovim logo.svg"
+    },
+    "emacs": {
+      "name": "GNU Emacs",
+      "file": "File:Emacs logo.svg"
+    },
+    "zed": {
+      "name": "Zed",
+      "file": "File:Zed logo.svg"
+    },
+    "lapce": {
+      "name": "Lapce",
+      "file": "File:Lapce logo.svg"
+    },
+    "fleet": {
+      "name": "JetBrains Fleet",
+      "file": "File:JetBrains Fleet logo.svg"
+    },
+    "react": {
+      "name": "React",
+      "file": "File:React logo.svg"
+    },
+    "vue": {
+      "name": "Vue.js",
+      "file": "File:Vue.js logo 2.svg",
+      "aliases": [
+        "vuejs"
+      ]
+    },
+    "angular": {
+      "name": "Angular",
+      "file": "File:Angular logo.svg"
+    },
+    "svelte": {
+      "name": "Svelte",
+      "file": "File:Svelte logo.svg"
+    },
+    "solidjs": {
+      "name": "SolidJS",
+      "file": "File:SolidJS logo.svg",
+      "aliases": [
+        "solid"
+      ]
+    },
+    "preact": {
+      "name": "Preact",
+      "file": "File:Preact logo.svg"
+    },
+    "alpine.js": {
+      "name": "Alpine.js",
+      "file": "File:Alpine.js logo.svg",
+      "aliases": [
+        "alpine"
+      ]
+    },
+    "lit": {
+      "name": "Lit",
+      "file": "File:Lit logo.svg"
+    },
+    "qwik": {
+      "name": "Qwik",
+      "file": "File:Qwik logo.svg"
+    },
+    "htmx": {
+      "name": "HTMX",
+      "file": "File:HTMX logo.svg"
+    },
+    "astro": {
+      "name": "Astro",
+      "file": "File:Astro logo.svg"
+    },
+    "nextjs": {
+      "name": "Next.js",
+      "file": "File:Next.js logo.svg",
+      "aliases": [
+        "next.js"
+      ]
+    },
+    "nuxt": {
+      "name": "Nuxt",
+      "file": "File:Nuxt logo.svg"
+    },
+    "remix": {
+      "name": "Remix",
+      "file": "File:Remix logo.svg"
+    },
+    "gatsby": {
+      "name": "Gatsby",
+      "file": "File:Gatsby logo.svg"
+    },
+    "sveltekit": {
+      "name": "SvelteKit",
+      "file": "File:SvelteKit logo.svg"
+    },
+    "solidstart": {
+      "name": "SolidStart",
+      "file": "File:SolidStart logo.svg"
+    },
+    "analog": {
+      "name": "Analog",
+      "file": "File:Analog logo.svg"
+    },
+    "nuejs": {
+      "name": "Nue.js",
+      "file": "File:Nue logo.svg"
+    },
+    "vite": {
+      "name": "Vite",
+      "file": "File:Vitejs-logo.svg",
+      "aliases": [
+        "vitejs"
+      ]
+    },
+    "webpack": {
+      "name": "Webpack",
+      "file": "File:Webpack logo.svg"
+    },
+    "rollup": {
+      "name": "Rollup",
+      "file": "File:Rollup logo.svg"
+    },
+    "esbuild": {
+      "name": "esbuild",
+      "file": "File:Esbuild logo.svg"
+    },
+    "turbopack": {
+      "name": "Turbopack",
+      "file": "File:Turbopack logo.svg"
+    },
+    "rspack": {
+      "name": "Rspack",
+      "file": "File:Rspack logo.svg"
+    },
+    "parcel": {
+      "name": "Parcel",
+      "file": "File:Parcel logo.svg"
+    },
+    "swc": {
+      "name": "SWC",
+      "file": "File:SWC logo.svg"
+    },
+    "tsup": {
+      "name": "tsup",
+      "file": "File:Tsup logo.svg"
+    },
+    "unbuild": {
+      "name": "unbuild",
+      "file": "File:Unbuild logo.svg"
+    },
+    "nodejs": {
+      "name": "Node.js",
+      "file": "File:Node.js logo.svg",
+      "aliases": [
+        "node"
+      ]
+    },
+    "npm": {
+      "name": "npm",
+      "file": "File:Npm-logo.svg"
+    },
+    "pnpm": {
+      "name": "pnpm",
+      "file": "File:Pnpm logo.svg"
+    },
+    "yarn": {
+      "name": "Yarn",
+      "file": "File:Yarn logo.svg"
+    },
+    "bun": {
+      "name": "Bun",
+      "file": "File:Bun logo.svg"
+    },
+    "deno": {
+      "name": "Deno",
+      "file": "File:Deno logo.svg"
+    },
+    "express": {
+      "name": "Express.js",
+      "file": "File:Expressjs logo.svg",
+      "aliases": [
+        "expressjs"
+      ]
+    },
+    "nestjs": {
+      "name": "NestJS",
+      "file": "File:NestJS logo.svg",
+      "aliases": [
+        "nest"
+      ]
+    },
+    "fastify": {
+      "name": "Fastify",
+      "file": "File:Fastify logo.svg"
+    },
+    "hono": {
+      "name": "Hono",
+      "file": "File:Hono logo.svg"
+    },
+    "koa": {
+      "name": "Koa",
+      "file": "File:Koa logo.svg"
+    },
+    "trpc": {
+      "name": "tRPC",
+      "file": "File:Trpc logo.svg"
+    },
+    "elysia": {
+      "name": "Elysia",
+      "file": "File:Elysia logo.svg"
+    },
+    "feathersjs": {
+      "name": "FeathersJS",
+      "file": "File:FeathersJS logo.svg",
+      "aliases": [
+        "feathers"
+      ]
+    },
+    "adonisjs": {
+      "name": "AdonisJS",
+      "file": "File:AdonisJS logo.svg",
+      "aliases": [
+        "adonis"
+      ]
+    },
+    "meteor": {
+      "name": "Meteor",
+      "file": "File:Meteor logo.svg"
+    },
+    "sails": {
+      "name": "Sails.js",
+      "file": "File:Sails.js logo.svg"
+    },
+    "redwoodjs": {
+      "name": "RedwoodJS",
+      "file": "File:RedwoodJS logo.svg"
+    },
+    "phoenix": {
+      "name": "Phoenix",
+      "file": "File:Phoenix Framework logo.svg"
+    },
+    "laravel": {
+      "name": "Laravel",
+      "file": "File:Laravel logo.svg"
+    },
+    "symfony": {
+      "name": "Symfony",
+      "file": "File:Symfony logo.svg"
+    },
+    "codeigniter": {
+      "name": "CodeIgniter",
+      "file": "File:CodeIgniter logo.svg"
+    },
+    "cakephp": {
+      "name": "CakePHP",
+      "file": "File:CakePHP logo.svg"
+    },
+    "django": {
+      "name": "Django",
+      "file": "File:Django logo.svg"
+    },
+    "flask": {
+      "name": "Flask",
+      "file": "File:Flask logo.svg"
+    },
+    "fastapi": {
+      "name": "FastAPI",
+      "file": "File:FastAPI logo.svg"
+    },
+    "tornado": {
+      "name": "Tornado",
+      "file": "File:Tornado logo.svg"
+    },
+    "sanic": {
+      "name": "Sanic",
+      "file": "File:Sanic logo.svg"
+    },
+    "starlette": {
+      "name": "Starlette",
+      "file": "File:Starlette logo.svg"
+    },
+    "rails": {
+      "name": "Ruby on Rails",
+      "file": "File:Ruby on Rails logo.svg",
+      "aliases": [
+        "ruby on rails",
+        "ror"
+      ]
+    },
+    "sinatra": {
+      "name": "Sinatra",
+      "file": "File:Sinatra logo.svg"
+    },
+    "hanami": {
+      "name": "Hanami",
+      "file": "File:Hanami logo.svg"
+    },
+    "spring boot": {
+      "name": "Spring Boot",
+      "file": "File:Spring Boot logo.svg",
+      "aliases": [
+        "springboot"
+      ]
+    },
+    "quarkus": {
+      "name": "Quarkus",
+      "file": "File:Quarkus logo.svg"
+    },
+    "micronaut": {
+      "name": "Micronaut",
+      "file": "File:Micronaut logo.svg"
+    },
+    "vertx": {
+      "name": "Vert.x",
+      "file": "File:Vert.x logo.svg"
+    },
+    "asp.net": {
+      "name": "ASP.NET",
+      "file": "File:ASP.NET logo.svg",
+      "aliases": [
+        "aspnet"
+      ]
+    },
+    "dotnet": {
+      "name": ".NET",
+      "file": "File:.NET logo.svg",
+      "aliases": [
+        "dotnet",
+        ".net core"
+      ]
+    },
+    ".net": {
+      "name": ".NET",
+      "file": "File:.NET logo.svg",
+      "aliases": [
+        "dotnet"
+      ]
+    },
+    "golang": {
+      "name": "Go",
+      "file": "File:Go logo.svg",
+      "aliases": [
+        "go"
+      ]
+    },
+    "cplusplus": {
+      "name": "C++",
+      "file": "File:C++ logo.svg"
+    },
+    "csharp": {
+      "name": "C#",
+      "file": "File:C Sharp logo.svg",
+      "aliases": [
+        "c#"
+      ]
+    },
+    "fsharp": {
+      "name": "F#",
+      "file": "File:F Sharp logo.svg",
+      "aliases": [
+        "f#"
+      ]
+    },
+    "powershell": {
+      "name": "PowerShell",
+      "file": "File:PowerShell logo.svg"
+    },
+    "bash": {
+      "name": "Bash",
+      "file": "File:Bash logo.svg"
+    },
+    "nushell": {
+      "name": "Nushell",
+      "file": "File:Nushell logo.svg",
+      "aliases": [
+        "nu"
+      ]
+    },
+    "fish": {
+      "name": "Fish",
+      "file": "File:Fish shell logo.svg"
+    },
+    "ziglang": {
+      "name": "Zig",
+      "file": "File:Zig logo.svg"
+    },
+    "nix": {
+      "name": "NixOS",
+      "file": "File:NixOS logo.svg",
+      "aliases": [
+        "nixos"
+      ]
+    },
+    "tailwindcss": {
+      "name": "Tailwind CSS",
+      "file": "File:Tailwind CSS logo.svg",
+      "aliases": [
+        "tailwind"
+      ]
+    },
+    "bootstrap": {
+      "name": "Bootstrap",
+      "file": "File:Bootstrap logo.svg"
+    },
+    "sass": {
+      "name": "Sass",
+      "file": "File:Sass logo.svg"
+    },
+    "less": {
+      "name": "Less",
+      "file": "File:Less logo.svg"
+    },
+    "unocss": {
+      "name": "UnoCSS",
+      "file": "File:UnoCSS logo.svg"
+    },
+    "styled components": {
+      "name": "Styled Components",
+      "file": "File:Styled Components logo.svg"
+    },
+    "emotion": {
+      "name": "Emotion",
+      "file": "File:Emotion logo.svg"
+    },
+    "vanilla extract": {
+      "name": "Vanilla Extract",
+      "file": "File:Vanilla Extract logo.svg",
+      "aliases": [
+        "vanilla-extract"
+      ]
+    },
+    "redux": {
+      "name": "Redux",
+      "file": "File:Redux logo.svg"
+    },
+    "zustand": {
+      "name": "Zustand",
+      "file": "File:Zustand logo.svg"
+    },
+    "mobx": {
+      "name": "MobX",
+      "file": "File:MobX logo.svg"
+    },
+    "jotai": {
+      "name": "Jotai",
+      "file": "File:Jotai logo.svg"
+    },
+    "pinia": {
+      "name": "Pinia",
+      "file": "File:Pinia logo.svg"
+    },
+    "tanstack query": {
+      "name": "TanStack Query",
+      "file": "File:TanStack Query logo.svg",
+      "aliases": [
+        "react query",
+        "tanstack-query"
+      ]
+    },
+    "swr": {
+      "name": "SWR",
+      "file": "File:SWR logo.svg"
+    },
+    "apollo": {
+      "name": "Apollo GraphQL",
+      "file": "File:Apollo GraphQL logo.svg",
+      "aliases": [
+        "apollo graphql"
+      ]
+    },
+    "urql": {
+      "name": "URQL",
+      "file": "File:URQL logo.svg"
+    },
+    "auth0": {
+      "name": "Auth0",
+      "file": "File:Auth0 logo.svg"
+    },
+    "clerk": {
+      "name": "Clerk",
+      "file": "File:Clerk logo.svg"
+    },
+    "nextauth": {
+      "name": "NextAuth.js",
+      "file": "File:NextAuth.js logo.svg",
+      "aliases": [
+        "authjs"
+      ]
+    },
+    "workos": {
+      "name": "WorkOS",
+      "file": "File:WorkOS logo.svg"
+    },
+    "okta": {
+      "name": "Okta",
+      "file": "File:Okta logo.svg"
+    },
+    "supabase auth": {
+      "name": "Supabase Auth",
+      "file": "File:Supabase logo.svg"
+    },
+    "lucia": {
+      "name": "Lucia",
+      "file": "File:Lucia logo.svg"
+    },
+    "authjs": {
+      "name": "Auth.js",
+      "file": "File:Auth.js logo.svg"
+    },
+    "stripe": {
+      "name": "Stripe",
+      "file": "File:Stripe logo.svg"
+    },
+    "paypal": {
+      "name": "PayPal",
+      "file": "File:PayPal logo.svg"
+    },
+    "square": {
+      "name": "Square",
+      "file": "File:Square logo.svg"
+    },
+    "razorpay": {
+      "name": "Razorpay",
+      "file": "File:Razorpay logo.svg"
+    },
+    "lemonsqueezy": {
+      "name": "Lemon Squeezy",
+      "file": "File:Lemon Squeezy logo.svg"
+    },
+    "polar": {
+      "name": "Polar",
+      "file": "File:Polar logo.svg"
+    },
+    "paddle": {
+      "name": "Paddle",
+      "file": "File:Paddle logo.svg"
+    },
+    "firebase": {
+      "name": "Firebase",
+      "file": "File:Firebase logo.svg"
+    },
+    "appwrite": {
+      "name": "Appwrite",
+      "file": "File:Appwrite logo.svg"
+    },
+    "amplify": {
+      "name": "AWS Amplify",
+      "file": "File:AWS Amplify logo.svg"
+    },
+    "shopify": {
+      "name": "Shopify",
+      "file": "File:Shopify logo.svg"
+    },
+    "woocommerce": {
+      "name": "WooCommerce",
+      "file": "File:WooCommerce logo.svg"
+    },
+    "wordpress": {
+      "name": "WordPress",
+      "file": "File:WordPress logo.svg"
+    },
+    "webflow": {
+      "name": "Webflow",
+      "file": "File:Webflow logo.svg"
+    },
+    "framer": {
+      "name": "Framer",
+      "file": "File:Framer logo.svg"
+    },
+    "wix": {
+      "name": "Wix",
+      "file": "File:Wix logo.svg"
+    },
+    "squarespace": {
+      "name": "Squarespace",
+      "file": "File:Squarespace logo.svg"
+    },
+    "ghost": {
+      "name": "Ghost",
+      "file": "File:Ghost logo.svg"
+    },
+    "strapi": {
+      "name": "Strapi",
+      "file": "File:Strapi logo.svg"
+    },
+    "directus": {
+      "name": "Directus",
+      "file": "File:Directus logo.svg"
+    },
+    "payload": {
+      "name": "Payload CMS",
+      "file": "File:Payload CMS logo.svg"
+    },
+    "keystonejs": {
+      "name": "KeystoneJS",
+      "file": "File:KeystoneJS logo.svg"
+    },
+    "sanity": {
+      "name": "Sanity",
+      "file": "File:Sanity logo.svg"
+    },
+    "contentful": {
+      "name": "Contentful",
+      "file": "File:Contentful logo.svg"
+    },
+    "hygraph": {
+      "name": "Hygraph",
+      "file": "File:Hygraph logo.svg",
+      "aliases": [
+        "graphcms"
+      ]
+    },
+    "vitest": {
+      "name": "Vitest",
+      "file": "File:Vitest logo.svg"
+    },
+    "jest": {
+      "name": "Jest",
+      "file": "File:Jest logo.svg"
+    },
+    "playwright": {
+      "name": "Playwright",
+      "file": "File:Playwright logo.svg"
+    },
+    "cypress": {
+      "name": "Cypress",
+      "file": "File:Cypress logo.svg"
+    },
+    "puppeteer": {
+      "name": "Puppeteer",
+      "file": "File:Puppeteer logo.svg"
+    },
+    "mocha": {
+      "name": "Mocha",
+      "file": "File:Mocha logo.svg"
+    },
+    "chai": {
+      "name": "Chai",
+      "file": "File:Chai logo.svg"
+    },
+    "ava": {
+      "name": "AVA",
+      "file": "File:AVA logo.svg"
+    },
+    "jasmine": {
+      "name": "Jasmine",
+      "file": "File:Jasmine logo.svg"
+    },
+    "karma": {
+      "name": "Karma",
+      "file": "File:Karma logo.svg"
+    },
+    "testing library": {
+      "name": "Testing Library",
+      "file": "File:Testing Library logo.svg"
+    },
+    "eslint": {
+      "name": "ESLint",
+      "file": "File:ESLint logo.svg"
+    },
+    "prettier": {
+      "name": "Prettier",
+      "file": "File:Prettier logo.svg"
+    },
+    "stylelint": {
+      "name": "Stylelint",
+      "file": "File:Stylelint logo.svg"
+    },
+    "biome": {
+      "name": "Biome",
+      "file": "File:Biome logo.svg"
+    },
+    "rome": {
+      "name": "Rome",
+      "file": "File:Rome logo.svg"
+    },
+    "oxlint": {
+      "name": "oxlint",
+      "file": "File:Oxlint logo.svg"
+    },
+    "husky": {
+      "name": "Husky",
+      "file": "File:Husky logo.svg"
+    },
+    "commitlint": {
+      "name": "Commitlint",
+      "file": "File:Commitlint logo.svg"
+    },
+    "lefthook": {
+      "name": "Lefthook",
+      "file": "File:Lefthook logo.svg"
+    },
+    "lint-staged": {
+      "name": "lint-staged",
+      "file": "File:Lint staged logo.svg",
+      "aliases": [
+        "lintstaged"
+      ]
+    },
+    "storybook": {
+      "name": "Storybook",
+      "file": "File:Storybook logo.svg"
+    },
+    "chromatic": {
+      "name": "Chromatic",
+      "file": "File:Chromatic logo.svg"
+    },
+    "ladle": {
+      "name": "Ladle",
+      "file": "File:Ladle logo.svg"
+    },
+    "histoire": {
+      "name": "Histoire",
+      "file": "File:Histoire logo.svg"
+    },
+    "socket.io": {
+      "name": "Socket.IO",
+      "file": "File:Socket.io logo.svg"
+    },
+    "pusher": {
+      "name": "Pusher",
+      "file": "File:Pusher logo.svg"
+    },
+    "ably": {
+      "name": "Ably",
+      "file": "File:Ably logo.svg"
+    },
+    "twilio": {
+      "name": "Twilio",
+      "file": "File:Twilio logo.svg"
+    },
+    "vonage": {
+      "name": "Vonage",
+      "file": "File:Vonage logo.svg"
+    },
+    "sendgrid": {
+      "name": "SendGrid",
+      "file": "File:SendGrid logo.svg"
+    },
+    "resend": {
+      "name": "Resend",
+      "file": "File:Resend logo.svg"
+    },
+    "mailgun": {
+      "name": "Mailgun",
+      "file": "File:Mailgun logo.svg"
+    },
+    "postmark": {
+      "name": "Postmark",
+      "file": "File:Postmark logo.svg"
+    },
+    "brevo": {
+      "name": "Brevo",
+      "file": "File:Brevo logo.svg",
+      "aliases": [
+        "sendinblue"
+      ]
+    },
+    "plivo": {
+      "name": "Plivo",
+      "file": "File:Plivo logo.svg"
+    },
+    "cloudinary": {
+      "name": "Cloudinary",
+      "file": "File:Cloudinary logo.svg"
+    },
+    "imagekit": {
+      "name": "ImageKit",
+      "file": "File:ImageKit logo.svg"
+    },
+    "uploadcare": {
+      "name": "Uploadcare",
+      "file": "File:Uploadcare logo.svg"
+    },
+    "mux": {
+      "name": "Mux",
+      "file": "File:Mux logo.svg"
+    },
+    "livepeer": {
+      "name": "Livepeer",
+      "file": "File:Livepeer logo.svg"
+    },
+    "daily.co": {
+      "name": "Daily.co",
+      "file": "File:Daily.co logo.svg",
+      "aliases": [
+        "daily"
+      ]
+    },
+    "agora": {
+      "name": "Agora",
+      "file": "File:Agora logo.svg"
+    },
+    "mapbox": {
+      "name": "Mapbox",
+      "file": "File:Mapbox logo.svg"
+    },
+    "leaflet": {
+      "name": "Leaflet",
+      "file": "File:Leaflet logo.svg"
+    },
+    "openstreetmap": {
+      "name": "OpenStreetMap",
+      "file": "File:OpenStreetMap logo.svg",
+      "aliases": [
+        "osm"
+      ]
+    },
+    "google maps": {
+      "name": "Google Maps",
+      "file": "File:Google Maps logo.svg"
+    },
+    "algolia": {
+      "name": "Algolia",
+      "file": "File:Algolia logo.svg"
+    },
+    "meilisearch": {
+      "name": "Meilisearch",
+      "file": "File:Meilisearch logo.svg"
+    },
+    "typesense": {
+      "name": "Typesense",
+      "file": "File:Typesense logo.svg"
+    },
+    "elastic search": {
+      "name": "Elasticsearch",
+      "file": "File:Elasticsearch logo.svg"
+    },
+    "redisearch": {
+      "name": "RediSearch",
+      "file": "File:Redisearch logo.svg"
+    },
+    "orama": {
+      "name": "Orama",
+      "file": "File:Orama logo.svg"
+    },
+    "anthropic claude": {
+      "name": "Claude",
+      "file": "File:Claude.ai logo.svg"
+    },
+    "cursor ai": {
+      "name": "Cursor",
+      "file": "File:Cursor logo.svg"
+    },
+    "continue": {
+      "name": "Continue.dev",
+      "file": "File:Continue.dev logo.svg"
+    },
+    "aider": {
+      "name": "Aider",
+      "file": "File:Aider logo.svg"
+    },
+    "cline": {
+      "name": "Cline",
+      "file": "File:Cline logo.svg"
+    },
+    "roo-code": {
+      "name": "RooCode",
+      "file": "File:RooCode logo.svg",
+      "aliases": [
+        "roocode"
+      ]
+    },
+    "copilotkit": {
+      "name": "CopilotKit",
+      "file": "File:CopilotKit logo.svg"
+    },
+    "vercel v0": {
+      "name": "v0",
+      "file": "File:V0 logo.svg",
+      "aliases": [
+        "v0.dev"
+      ]
+    },
+    "bolt": {
+      "name": "Bolt.new",
+      "file": "File:Bolt.new logo.svg",
+      "aliases": [
+        "bolt.new"
+      ]
+    },
+    "stackblitz": {
+      "name": "StackBlitz",
+      "file": "File:StackBlitz logo.svg"
+    },
+    "codesandbox": {
+      "name": "CodeSandbox",
+      "file": "File:CodeSandbox logo.svg"
+    },
+    "gitpod": {
+      "name": "Gitpod",
+      "file": "File:Gitpod logo.svg"
+    },
+    "coder": {
+      "name": "Coder",
+      "file": "File:Coder logo.svg"
+    },
+    "sourcegraph": {
+      "name": "Sourcegraph",
+      "file": "File:Sourcegraph logo.svg"
+    },
+    "linear.app": {
+      "name": "Linear",
+      "file": "File:Linear logo.svg"
+    },
+    "raycast": {
+      "name": "Raycast",
+      "file": "File:Raycast logo.svg"
+    },
+    "warp": {
+      "name": "Warp",
+      "file": "File:Warp terminal logo.svg",
+      "aliases": [
+        "warp terminal"
+      ]
+    },
+    "iterm2": {
+      "name": "iTerm2",
+      "file": "File:Iterm2 logo.svg"
+    },
+    "hyper": {
+      "name": "Hyper",
+      "file": "File:Hyper logo.svg"
+    },
+    "wezterm": {
+      "name": "WezTerm",
+      "file": "File:WezTerm logo.svg"
+    },
+    "alacritty": {
+      "name": "Alacritty",
+      "file": "File:Alacritty logo.svg"
+    },
+    "kitty": {
+      "name": "Kitty",
+      "file": "File:Kitty terminal logo.svg"
+    },
+    "tmux": {
+      "name": "tmux",
+      "file": "File:Tmux logo.svg"
+    },
+    "starship": {
+      "name": "Starship",
+      "file": "File:Starship logo.svg"
+    },
+    "oh my zsh": {
+      "name": "Oh My Zsh",
+      "file": "File:Oh My Zsh logo.svg",
+      "aliases": [
+        "ohmyzsh"
+      ]
+    },
+    "oh my bash": {
+      "name": "Oh My Bash",
+      "file": "File:Oh My Bash logo.svg"
+    },
+    "powerlevel10k": {
+      "name": "Powerlevel10k",
+      "file": "File:Powerlevel10k logo.svg"
+    },
+    "zsh": {
+      "name": "Zsh",
+      "file": "File:Zsh logo.svg"
+    },
+    "fish shell": {
+      "name": "Fish",
+      "file": "File:Fish shell logo.svg"
+    },
+    "homebrew": {
+      "name": "Homebrew",
+      "file": "File:Homebrew logo.svg"
+    },
+    "apt": {
+      "name": "APT",
+      "file": "File:Apt logo.svg"
+    },
+    "yum": {
+      "name": "YUM",
+      "file": "File:Yum logo.svg"
+    },
+    "apk": {
+      "name": "APK",
+      "file": "File:Apk logo.svg"
+    },
+    "snap": {
+      "name": "Snap",
+      "file": "File:Snapcraft logo.svg",
+      "aliases": [
+        "snapcraft"
+      ]
+    },
+    "flatpak": {
+      "name": "Flatpak",
+      "file": "File:Flatpak logo.svg"
+    },
+    "pacman": {
+      "name": "pacman",
+      "file": "File:Pacman logo.svg"
+    },
+    "winget": {
+      "name": "winget",
+      "file": "File:Windows Package Manager logo.svg"
+    },
+    "brew": {
+      "name": "Homebrew",
+      "file": "File:Homebrew logo.svg"
+    },
+    "vercel analytics": {
+      "name": "Vercel Analytics",
+      "file": "File:Vercel logo.svg"
+    },
+    "google analytics": {
+      "name": "Google Analytics",
+      "file": "File:Google Analytics logo.svg",
+      "aliases": [
+        "ga4",
+        "ga"
+      ]
+    },
+    "plausible": {
+      "name": "Plausible Analytics",
+      "file": "File:Plausible Analytics logo.svg"
+    },
+    "umami": {
+      "name": "Umami",
+      "file": "File:Umami logo.svg"
+    },
+    "posthog": {
+      "name": "PostHog",
+      "file": "File:PostHog logo.svg"
+    },
+    "mixpanel": {
+      "name": "Mixpanel",
+      "file": "File:Mixpanel logo.svg"
+    },
+    "amplitude": {
+      "name": "Amplitude",
+      "file": "File:Amplitude logo.svg"
+    },
+    "segment": {
+      "name": "Segment",
+      "file": "File:Segment logo.svg"
+    },
+    "hotjar": {
+      "name": "Hotjar",
+      "file": "File:Hotjar logo.svg"
+    },
+    "fullstory": {
+      "name": "FullStory",
+      "file": "File:FullStory logo.svg"
+    },
+    "sentry.io": {
+      "name": "Sentry",
+      "file": "File:Sentry Logo.svg"
+    },
+    "logrocket": {
+      "name": "LogRocket",
+      "file": "File:LogRocket logo.svg"
+    },
+    "clarity": {
+      "name": "Microsoft Clarity",
+      "file": "File:Microsoft Clarity logo.svg",
+      "aliases": [
+        "microsoft clarity"
+      ]
+    },
+    "crisp": {
+      "name": "Crisp",
+      "file": "File:Crisp logo.svg"
+    },
+    "intercom": {
+      "name": "Intercom",
+      "file": "File:Intercom logo.svg"
+    },
+    "zendesk": {
+      "name": "Zendesk",
+      "file": "File:Zendesk logo.svg"
+    },
+    "freshdesk": {
+      "name": "Freshdesk",
+      "file": "File:Freshdesk logo.svg"
+    },
+    "helpdesk": {
+      "name": "HelpDesk",
+      "file": "File:HelpDesk logo.svg"
+    },
+    "hubspot": {
+      "name": "HubSpot",
+      "file": "File:HubSpot logo.svg"
+    },
+    "salesforce": {
+      "name": "Salesforce",
+      "file": "File:Salesforce logo.svg"
+    },
+    "pipedrive": {
+      "name": "Pipedrive",
+      "file": "File:Pipedrive logo.svg"
+    },
+    "zoho": {
+      "name": "Zoho",
+      "file": "File:Zoho logo.svg"
+    },
+    "mailchimp": {
+      "name": "Mailchimp",
+      "file": "File:Mailchimp logo.svg"
+    },
+    "constant contact": {
+      "name": "Constant Contact",
+      "file": "File:Constant Contact logo.svg"
+    },
+    "convertkit": {
+      "name": "ConvertKit",
+      "file": "File:ConvertKit logo.svg"
+    },
+    "beehiiv": {
+      "name": "beehiiv",
+      "file": "File:Beehiiv logo.svg"
+    },
+    "buttondown": {
+      "name": "Buttondown",
+      "file": "File:Buttondown logo.svg"
+    },
+    "loops": {
+      "name": "Loops",
+      "file": "File:Loops logo.svg"
+    },
+    "customer.io": {
+      "name": "Customer.io",
+      "file": "File:Customer.io logo.svg"
+    },
+    "braze": {
+      "name": "Braze",
+      "file": "File:Braze logo.svg"
+    },
+    "onesignal": {
+      "name": "OneSignal",
+      "file": "File:OneSignal logo.svg"
+    },
+    "klaviyo": {
+      "name": "Klaviyo",
+      "file": "File:Klaviyo logo.svg"
+    },
+    "meta ads": {
+      "name": "Meta Ads",
+      "file": "File:Meta Ads logo.svg",
+      "aliases": [
+        "facebook ads"
+      ]
+    },
+    "google ads": {
+      "name": "Google Ads",
+      "file": "File:Google Ads logo.svg"
+    },
+    "linkedin ads": {
+      "name": "LinkedIn Ads",
+      "file": "File:LinkedIn Ads logo.svg"
+    },
+    "tiktok ads": {
+      "name": "TikTok Ads",
+      "file": "File:TikTok Ads logo.svg"
+    },
+    "reddit ads": {
+      "name": "Reddit Ads",
+      "file": "File:Reddit Ads logo.svg"
+    },
+    "x ads": {
+      "name": "X Ads",
+      "file": "File:X Ads logo.svg"
+    },
+    "ethereum": {
+      "name": "Ethereum",
+      "file": "File:Ethereum logo.svg"
+    },
+    "bitcoin": {
+      "name": "Bitcoin",
+      "file": "File:Bitcoin logo.svg"
+    },
+    "solana": {
+      "name": "Solana",
+      "file": "File:Solana logo.svg"
+    },
+    "polygon": {
+      "name": "Polygon",
+      "file": "File:Polygon logo.svg"
+    },
+    "avalanche": {
+      "name": "Avalanche",
+      "file": "File:Avalanche logo.svg"
+    },
+    "arbitrum": {
+      "name": "Arbitrum",
+      "file": "File:Arbitrum logo.svg"
+    },
+    "optimism": {
+      "name": "Optimism",
+      "file": "File:Optimism logo.svg"
+    },
+    "base": {
+      "name": "Base",
+      "file": "File:Base logo.svg"
+    },
+    "binance smart chain": {
+      "name": "BNB Chain",
+      "file": "File:BNB Chain logo.svg",
+      "aliases": [
+        "bsc",
+        "bnb chain"
+      ]
+    },
+    "cardano": {
+      "name": "Cardano",
+      "file": "File:Cardano logo.svg"
+    },
+    "polkadot": {
+      "name": "Polkadot",
+      "file": "File:Polkadot logo.svg"
+    },
+    "near": {
+      "name": "NEAR Protocol",
+      "file": "File:NEAR Protocol logo.svg",
+      "aliases": [
+        "near protocol"
+      ]
+    },
+    "tezos": {
+      "name": "Tezos",
+      "file": "File:Tezos logo.svg"
+    },
+    "cosmos": {
+      "name": "Cosmos",
+      "file": "File:Cosmos logo.svg"
+    },
+    "chainlink": {
+      "name": "Chainlink",
+      "file": "File:Chainlink logo.svg"
+    },
+    "the graph": {
+      "name": "The Graph",
+      "file": "File:The Graph logo.svg"
+    },
+    "ipfs": {
+      "name": "IPFS",
+      "file": "File:IPFS logo.svg"
+    },
+    "filecoin": {
+      "name": "Filecoin",
+      "file": "File:Filecoin logo.svg"
+    },
+    "metamask": {
+      "name": "MetaMask",
+      "file": "File:MetaMask logo.svg"
+    },
+    "walletconnect": {
+      "name": "WalletConnect",
+      "file": "File:WalletConnect logo.svg"
+    },
+    "coinbase": {
+      "name": "Coinbase",
+      "file": "File:Coinbase logo.svg"
+    },
+    "uniswap": {
+      "name": "Uniswap",
+      "file": "File:Uniswap logo.svg"
+    },
+    "sushiswap": {
+      "name": "SushiSwap",
+      "file": "File:SushiSwap logo.svg"
+    },
+    "aave": {
+      "name": "Aave",
+      "file": "File:Aave logo.svg"
+    },
+    "compound": {
+      "name": "Compound",
+      "file": "File:Compound logo.svg"
+    },
+    "makerdao": {
+      "name": "MakerDAO",
+      "file": "File:MakerDAO logo.svg"
+    },
+    "react native": {
+      "name": "React Native",
+      "file": "File:React Native logo.svg"
+    },
+    "expo": {
+      "name": "Expo",
+      "file": "File:Expo logo.svg"
+    },
+    "ionic": {
+      "name": "Ionic",
+      "file": "File:Ionic logo.svg"
+    },
+    "capacitor": {
+      "name": "Capacitor",
+      "file": "File:Capacitor logo.svg"
+    },
+    "cordova": {
+      "name": "Apache Cordova",
+      "file": "File:Apache Cordova logo.svg"
+    },
+    "flutter": {
+      "name": "Flutter",
+      "file": "File:Flutter logo.svg"
+    },
+    "swiftui": {
+      "name": "SwiftUI",
+      "file": "File:SwiftUI logo.svg"
+    },
+    "jetpack compose": {
+      "name": "Jetpack Compose",
+      "file": "File:Jetpack Compose logo.svg"
+    },
+    "kotlin multiplatform": {
+      "name": "Kotlin Multiplatform",
+      "file": "File:Kotlin Multiplatform logo.svg",
+      "aliases": [
+        "kmp"
+      ]
+    },
+    "nativescript": {
+      "name": "NativeScript",
+      "file": "File:NativeScript logo.svg"
+    },
+    "quasar": {
+      "name": "Quasar",
+      "file": "File:Quasar logo.svg"
+    },
+    "tauri": {
+      "name": "Tauri",
+      "file": "File:Tauri logo.svg"
+    },
+    "electron": {
+      "name": "Electron",
+      "file": "File:Electron logo.svg"
+    },
+    "neutralinojs": {
+      "name": "Neutralinojs",
+      "file": "File:Neutralinojs logo.svg"
+    },
+    "nwjs": {
+      "name": "NW.js",
+      "file": "File:NW.js logo.svg",
+      "aliases": [
+        "nw.js"
+      ]
+    },
+    "zoom": {
+      "name": "Zoom",
+      "file": "File:Zoom logo.svg"
+    },
+    "meet": {
+      "name": "Google Meet",
+      "file": "File:Google Meet logo.svg",
+      "aliases": [
+        "google meet"
+      ]
+    },
+    "microsoft teams": {
+      "name": "Microsoft Teams",
+      "file": "File:Microsoft Teams logo.svg",
+      "aliases": [
+        "teams"
+      ]
+    },
+    "webex": {
+      "name": "Webex",
+      "file": "File:Webex logo.svg"
+    },
+    "whereby": {
+      "name": "Whereby",
+      "file": "File:Whereby logo.svg"
+    },
+    "jitsi": {
+      "name": "Jitsi",
+      "file": "File:Jitsi logo.svg"
+    },
+    "bigbluebutton": {
+      "name": "BigBlueButton",
+      "file": "File:BigBlueButton logo.svg"
+    },
+    "slack huddle": {
+      "name": "Slack",
+      "file": "File:Slack Technologies Logo.svg"
+    },
+    "discord voice": {
+      "name": "Discord",
+      "file": "File:Discord Color Text Logo (2015-2021).svg"
+    },
+    "matrix": {
+      "name": "Matrix",
+      "file": "File:Matrix logo.svg"
+    },
+    "element": {
+      "name": "Element",
+      "file": "File:Element logo.svg"
+    },
+    "signal": {
+      "name": "Signal",
+      "file": "File:Signal logo.svg"
+    },
+    "session": {
+      "name": "Session",
+      "file": "File:Session logo.svg"
+    },
+    "threema": {
+      "name": "Threema",
+      "file": "File:Threema logo.svg"
+    },
+    "mastodon": {
+      "name": "Mastodon",
+      "file": "File:Mastodon logo.svg"
+    },
+    "threads": {
+      "name": "Threads",
+      "file": "File:Threads logo.svg"
+    },
+    "bluesky": {
+      "name": "Bluesky",
+      "file": "File:Bluesky logo.svg"
+    },
+    "lemmy": {
+      "name": "Lemmy",
+      "file": "File:Lemmy logo.svg"
+    },
+    "kbin": {
+      "name": "Kbin",
+      "file": "File:Kbin logo.svg"
+    },
+    "nostr": {
+      "name": "Nostr",
+      "file": "File:Nostr logo.svg"
+    },
+    "pixelfed": {
+      "name": "Pixelfed",
+      "file": "File:Pixelfed logo.svg"
+    },
+    "peertube": {
+      "name": "PeerTube",
+      "file": "File:PeerTube logo.svg"
+    },
+    "twitch": {
+      "name": "Twitch",
+      "file": "File:Twitch logo.svg"
+    },
+    "kick": {
+      "name": "Kick",
+      "file": "File:Kick logo.svg"
+    },
+    "odysee": {
+      "name": "Odysee",
+      "file": "File:Odysee logo.svg"
+    },
+    "rumble": {
+      "name": "Rumble",
+      "file": "File:Rumble logo.svg"
+    },
+    "vimeo": {
+      "name": "Vimeo",
+      "file": "File:Vimeo logo.svg"
     }
   }
 }
