@@ -13,7 +13,7 @@ and the maintainer can produce a point release promptly.
 
 ## Reporting a vulnerability
 
-**Do not open a public issue.** Email `avdeshjadon15@gmail.com` or open a
+**Do not open a public issue.** Email `theavdeshjadon@gmail.com` or open a
 [GitHub security advisory](https://github.com/avdeshjadon/get-svg/security/advisories/new)
 (privately). Include:
 
