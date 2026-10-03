@@ -23,8 +23,21 @@ pub struct Cli {
     #[arg(short = 'v', long, global = true)]
     pub verbose: bool,
 
+    /// Optional destination directory or file path for direct brand download.
+    #[arg(short = 'o', long = "output")]
+    pub output: Option<std::path::PathBuf>,
+
+    /// Overwrite existing files instead of skipping.
+    #[arg(long)]
+    pub overwrite: bool,
+
     #[command(subcommand)]
     pub command: Option<Command>,
+
+    /// Direct brand/logo to download (e.g. `getsvg amazon`, `getsvg "amazon prime"`).
+    /// If omitted, launches the interactive terminal UI.
+    #[arg(num_args = 1..)]
+    pub brand: Vec<String>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -276,5 +289,19 @@ mod tests {
     fn parses_dlt_with_yes() {
         let cli = Cli::parse_from(["get-svg", "dlt", "--yes"]);
         assert!(matches!(cli.command, Some(Command::Dlt { yes: true })));
+    }
+
+    #[test]
+    fn parses_direct_brand_argument() {
+        let cli = Cli::parse_from(["get-svg", "amazon"]);
+        assert!(cli.command.is_none());
+        assert_eq!(cli.brand, vec!["amazon"]);
+    }
+
+    #[test]
+    fn parses_multi_word_brand_arguments() {
+        let cli = Cli::parse_from(["get-svg", "amazon", "prime"]);
+        assert!(cli.command.is_none());
+        assert_eq!(cli.brand, vec!["amazon", "prime"]);
     }
 }

@@ -9,6 +9,7 @@
 
 pub mod api;
 pub mod archive;
+pub mod brands;
 pub mod cache;
 pub mod cli;
 pub mod commands;

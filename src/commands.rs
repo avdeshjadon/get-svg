@@ -22,9 +22,8 @@ use crate::{archive, doctor, search};
 
 /// Top-level dispatch. Returns a process exit code.
 pub async fn dispatch(cli: Cli) -> Result<i32> {
-    match cli.command {
-        None => interactive(),
-        Some(cmd) => match cmd {
+    if let Some(cmd) = cli.command {
+        match cmd {
             Command::Search {
                 query,
                 limit,
@@ -118,8 +117,153 @@ pub async fn dispatch(cli: Cli) -> Result<i32> {
             }
             Command::Dlt { yes } => crate::uninstall::run_uninstall(yes),
             Command::Update => crate::update::run_update().await,
-        },
+        }
+    } else if !cli.brand.is_empty() {
+        let query = cli.brand.join(" ");
+        cmd_direct_brand(&query, cli.output, cli.overwrite).await
+    } else {
+        interactive()
     }
+}
+
+/// Instant direct brand/logo resolver and downloader.
+pub async fn cmd_direct_brand(
+    query: &str,
+    output: Option<PathBuf>,
+    overwrite: bool,
+) -> Result<i32> {
+    let settings = Settings::load()?;
+    let provider = WikimediaClient::new(&settings)?;
+    let cache = Cache::new(&settings);
+    let registry = crate::brands::BrandRegistry::load();
+
+    let started = std::time::Instant::now();
+    let query_trim = query.trim();
+
+    // 1. Resolve brand (curated registry first, then search fallback)
+    let (asset, is_curated, brand_name) = if let Some(brand) = registry.resolve(query_trim) {
+        eprintln!("\x1b[1;32m\u{2713}\x1b[0m Verified brand: \x1b[1m{}\x1b[0m", brand.name);
+        match provider.get_asset(&brand.file).await? {
+            Some(a) => (a, true, brand.name.clone()),
+            None => {
+                let found = search::fetch_page(&provider, &cache, &brand.file, 0, 5).await?;
+                if let Some(a) = found.page.assets.into_iter().next() {
+                    (a, true, brand.name.clone())
+                } else {
+                    return Err(Error::Other(format!(
+                        "Verified file '{}' could not be resolved from Wikimedia",
+                        brand.file
+                    )));
+                }
+            }
+        }
+    } else {
+        eprintln!("Searching for official \"{}\" logo...", query_trim);
+        let search_query = format!("{query_trim} logo filetype:svg");
+        let found = search::fetch_page(&provider, &cache, &search_query, 0, 15).await?;
+
+        let norm_q = crate::brands::normalize(query_trim);
+        let best = found.page.assets.iter().find(|a| {
+            let norm_title = crate::brands::normalize(a.original_name.trim_end_matches(".svg"));
+            norm_title == norm_q || norm_title.starts_with(&norm_q)
+        }).or_else(|| {
+            found.page.assets.iter().find(|a| {
+                a.original_name.to_lowercase().contains(&norm_q)
+            })
+        }).or_else(|| found.page.assets.first()).cloned();
+
+        match best {
+            Some(a) => {
+                eprintln!("\u{2139} \"{}\" is not yet in verified brands.json.", query_trim);
+                eprintln!("\x1b[1;32m\u{2713}\x1b[0m Best match: \x1b[1m{}\x1b[0m", a.original_name);
+                (a, false, query_trim.to_string())
+            }
+            None => {
+                eprintln!("\x1b[1;31m\u{2717} No SVG logo found for \"{}\".\x1b[0m", query_trim);
+                eprintln!("Tip: Run `getsvg` with no arguments to search interactively.");
+                return Ok(1);
+            }
+        }
+    };
+
+    // 2. Determine target file path
+    let target_file = match output {
+        Some(p) => {
+            let is_target_dir = p.is_dir()
+                || p.to_string_lossy().ends_with('/')
+                || p.to_string_lossy().ends_with(std::path::MAIN_SEPARATOR);
+            if is_target_dir {
+                std::fs::create_dir_all(&p)?;
+                let filename = format!("{}.svg", crate::brands::slugify(&brand_name));
+                p.join(filename)
+            } else if p.extension().is_some() {
+                if let Some(parent) = p.parent() {
+                    if !parent.as_os_str().is_empty() {
+                        std::fs::create_dir_all(parent)?;
+                    }
+                }
+                p
+            } else {
+                std::fs::create_dir_all(&p)?;
+                let filename = format!("{}.svg", crate::brands::slugify(&brand_name));
+                p.join(filename)
+            }
+        }
+        None => {
+            let filename = format!("{}.svg", crate::brands::slugify(&brand_name));
+            PathBuf::from(filename)
+        }
+    };
+
+    if target_file.exists() && !overwrite {
+        eprintln!(
+            "\x1b[1;33m\u{26A0}\x1b[0m File '{}' already exists. Use `--overwrite` to replace.",
+            target_file.display()
+        );
+        return Ok(0);
+    }
+
+    // 3. Download
+    let download_url = asset.url.as_ref().ok_or_else(|| {
+        Error::Other(format!("No direct download URL available for {}", asset.original_name))
+    })?;
+
+    let client = provider.client();
+    let resp = client
+        .get(download_url)
+        .header(reqwest::header::USER_AGENT, settings.user_agent())
+        .header(reqwest::header::REFERER, "https://commons.wikimedia.org/")
+        .send()
+        .await?;
+
+    if !resp.status().is_success() {
+        return Err(Error::Other(format!(
+            "Failed to download SVG (HTTP {})",
+            resp.status()
+        )));
+    }
+
+    let bytes = resp.bytes().await?;
+    std::fs::write(&target_file, &bytes)?;
+
+    let size_human = crate::models::format_size(bytes.len() as u64);
+    let license = asset.license_or_unknown();
+
+    eprintln!(
+        "\x1b[1;32m\u{2713} Saved to {}\x1b[0m ({}, {}) in {}",
+        target_file.display(),
+        size_human,
+        license,
+        crate::models::format_ms(started.elapsed().as_millis() as u64)
+    );
+
+    if !is_curated {
+        eprintln!(
+            "\x1b[2m💡 Tip: Want to verify this brand? Contribute to brands.json at https://github.com/avdeshjadon/get-svg\x1b[0m"
+        );
+    }
+
+    Ok(0)
 }
 
 fn default_download_dir() -> PathBuf {

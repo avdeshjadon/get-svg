@@ -1,0 +1,109 @@
+{
+  "brands": {
+    "amazon": {
+      "name": "Amazon",
+      "file": "File:Amazon logo.svg",
+      "aliases": ["amazon.com", "amzn"]
+    },
+    "amazon prime": {
+      "name": "Amazon Prime",
+      "file": "File:Amazon Prime Logo.svg",
+      "aliases": ["prime", "prime video", "amazon prime video"]
+    },
+    "amazon music": {
+      "name": "Amazon Music",
+      "file": "File:Amazon Music (Logo).svg",
+      "aliases": ["amazon-music"]
+    },
+    "amazon web services": {
+      "name": "Amazon Web Services",
+      "file": "File:Amazon Web Services Logo.svg",
+      "aliases": ["aws"]
+    },
+    "google": {
+      "name": "Google",
+      "file": "File:Google 2015 logo.svg",
+      "aliases": ["google logo"]
+    },
+    "apple": {
+      "name": "Apple",
+      "file": "File:Apple logo black.svg",
+      "aliases": ["apple logo", "apple inc"]
+    },
+    "microsoft": {
+      "name": "Microsoft",
+      "file": "File:Microsoft logo (2012).svg"
+    },
+    "meta": {
+      "name": "Meta",
+      "file": "File:Meta Platforms Inc. logo.svg",
+      "aliases": ["facebook"]
+    },
+    "instagram": {
+      "name": "Instagram",
+      "file": "File:Instagram logo 2016.svg",
+      "aliases": ["insta"]
+    },
+    "whatsapp": {
+      "name": "WhatsApp",
+      "file": "File:WhatsApp.svg"
+    },
+    "flipkart": {
+      "name": "Flipkart",
+      "file": "File:Flipkart logo (2026).svg"
+    },
+    "myntra": {
+      "name": "Myntra",
+      "file": "File:65c5da9f878952603e370d03 Myntra-Logo 1.svg"
+    },
+    "netflix": {
+      "name": "Netflix",
+      "file": "File:Netflix 2015 logo.svg"
+    },
+    "spotify": {
+      "name": "Spotify",
+      "file": "File:Spotify logo with text.svg"
+    },
+    "youtube": {
+      "name": "YouTube",
+      "file": "File:YouTube full-color icon (2017).svg"
+    },
+    "github": {
+      "name": "GitHub",
+      "file": "File:Octicons-mark-github.svg"
+    },
+    "twitter": {
+      "name": "Twitter",
+      "file": "File:Logo of Twitter.svg"
+    },
+    "x": {
+      "name": "X",
+      "file": "File:X logo 2023.svg",
+      "aliases": ["x.com"]
+    },
+    "discord": {
+      "name": "Discord",
+      "file": "File:Discord Color Text Logo (2015-2021).svg"
+    },
+    "linkedin": {
+      "name": "LinkedIn",
+      "file": "File:LinkedIn Logo (with ®).svg"
+    },
+    "telegram": {
+      "name": "Telegram",
+      "file": "File:Telegram 2019 Logo.svg"
+    },
+    "slack": {
+      "name": "Slack",
+      "file": "File:Slack Technologies Logo.svg"
+    },
+    "reddit": {
+      "name": "Reddit",
+      "file": "File:Reddit logo.svg"
+    },
+    "tesla": {
+      "name": "Tesla",
+      "file": "File:Tesla Motors Logo.svg"
+    }
+  }
+}
